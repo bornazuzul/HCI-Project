@@ -21,4 +21,4 @@
 
 ### Semester Assignments
 
-- Link to Assignment 1: [**Assignment 1**]()
+- Link to Assignment 1: [**Assignment 1**](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/1_assigment.md)
