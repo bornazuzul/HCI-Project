@@ -7,6 +7,11 @@ Instead of spending hours on social media, watching TV, or playing games, that t
 However, there is no simple, centralized, and accessible platform that connects people who want to volunteer with local events and organizations that need help.
 This results in a missed opportunity for both sides — those who want to do good, and those who need support.
 
+<video width="640" controls>
+  <source src="./assignments/video_pitch.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
 2. Target Users
 
 👥 Primary users: Individuals of good will who want to spend their free time doing humanitarian and socially beneficial activities — including students, employees, retirees, and community-minded citizens.
