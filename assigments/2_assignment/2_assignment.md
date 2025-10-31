@@ -115,6 +115,6 @@
 ---
 
 ## 3. Sitemap
-![sitemap]()
+![sitemap](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/2_assignment/images/sitemap.png)
 
 
