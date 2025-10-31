@@ -22,4 +22,4 @@
 ### Semester Assignments
 
 - Link to Assignment 1: [**Assignment 1**](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/1_assigment.md)
-- Link to Assignment 2: [**Assignment 2**]()
+- Link to Assignment 2: [**Assignment 2**](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/2_assignment/2_assignment.md)
