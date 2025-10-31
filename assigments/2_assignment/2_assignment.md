@@ -27,8 +27,8 @@
 - **Occupation:** Local NGO event coordinator  
 - **Location:** Zagreb  
 - **Goals:**  
-  - Find reliable volunteers  
-  - Promote and manage events efficiently  
+  - Find volunteers for events  
+  - Easily manage events 
 - **Motivation:** Wants a simple way to connect with volunteers  
 - **Frustrations:** Wastes time posting events across multiple platforms  
 - **Quote:** “I wish there was one place where all volunteers could see our events.”  
