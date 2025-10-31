@@ -7,6 +7,7 @@
 ## 1. User Personas
 
 ### 👩 **Ana – Student Volunteer**
+  ![Ana – Student Volunteer](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/2_assignment/images/1_user.jpeg)
 - **Age:** 20  
 - **Occupation:** Psychology student  
 - **Location:** Split  
@@ -16,12 +17,12 @@
 - **Motivation:** Loves helping others but struggles to find volunteering events easily  
 - **Frustrations:** Scattered and disorganized information about volunteering opportunities  
 - **Quote:** “I want to help, but I don’t know where to start.”  
-- **Image:**  
-  ![Ana – Student Volunteer]()
+
 
 ---
 
 ### 👨 **Marko – Event Organizer**
+![Marko – Event Organizer](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/2_assignment/images/2_user.jpeg)
 - **Age:** 35  
 - **Occupation:** Local NGO event coordinator  
 - **Location:** Zagreb  
@@ -31,12 +32,13 @@
 - **Motivation:** Wants a simple way to connect with volunteers  
 - **Frustrations:** Wastes time posting events across multiple platforms  
 - **Quote:** “I wish there was one place where all volunteers could see our events.”  
-- **Image:**  
-  ![Marko – Event Organizer]()
+ 
+  
 
 ---
 
 ### 👩‍🏫 **Ivana – Working Professional**
+  ![Ivana – Working Professional](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/2_assignment/images/3_user.jpeg)
 - **Age:** 42  
 - **Occupation:** Teacher  
 - **Location:** Zadar  
@@ -46,7 +48,7 @@
 - **Motivation:** Feels fulfilled when helping others  
 - **Frustrations:** Hard to find flexible, time-friendly volunteering options  
 - **Quote:** “I’d love to help, but I need something that fits my time.”  
-- **Image:**  
-  ![Ivana – Working Professional]()
+ 
+
 
 ---
