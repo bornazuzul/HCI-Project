@@ -52,3 +52,66 @@
 
 
 ---
+
+## 2. Information Architecture
+
+### **App Entry (Login / Registration)**
+- **Login:**  
+  - If the user already has an account, they log in.  
+  - A session token is created and the user is redirected to the **Home** page.  
+- **Registration:**  
+  - If the user doesn’t have an account, they click the “No account?” button.  
+  - The app redirects them to the registration form where they fill in:  
+    - First name  
+    - Last name  
+    - Email  
+    - Password  
+  - After successful registration, they are redirected back to **Login**.  
+
+---
+
+### **USER**
+
+#### **Home**
+- Introduction, images, and app description.  
+- “About” section explaining the app’s purpose and goals.  
+
+#### **Activities**
+- Displays all available activities.  
+- Filtering options:
+  - By location  
+  - By type of activity  
+- Users can:
+  - Join or withdraw from activities  
+  - Create new activities (pending admin approval)  
+- Each activity shows the number of registered participants.  
+
+#### **Notifications**
+- All users can view all notifications.  
+- The user who created an event can send a notification related to that event.  
+- To create a notification:
+  - Click the “Create” button → opens popup  
+  - Select an event from the list of user’s events  
+  - Enter title and message  
+
+---
+
+### **ADMIN**
+
+#### **Home**
+- Same content as user’s home.  
+
+#### **Activities**
+- Admin can delete events (automatically sends a notification to all users that the event has been removed).  
+- Admin can view a list of newly created activities and approve them for public visibility.  
+
+#### **Notifications**
+- Admin can delete notifications.  
+
+#### **Users**
+- Admin can view all users.  
+- Admin can delete users.  
+
+---
+
+
