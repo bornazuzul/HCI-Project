@@ -23,3 +23,6 @@
 
 - Link to Assignment 1: [**Assignment 1**](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/1_assigment.md)
 - Link to Assignment 2: [**Assignment 2**](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/2_assignment/2_assignment.md)
+- Link to Assignment 3: [**Assignment 3**](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/3_assigment.md)
+
+Live at: https://hci-project-rho.vercel.app/
