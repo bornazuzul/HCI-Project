@@ -1,0 +1,18 @@
+## Project Description
+In this assignment, we successfully developed a functional web application using Next.js.
+All required steps were completed:
+
+✅ Set up a new Next.js project.
+
+✅ Created template pages corresponding to the sitemap categories.
+
+✅ Defined routes for each page, ensuring proper navigation structure.
+
+✅ Implemented navigation between pages using the Next.js Link component for smooth transitions.
+
+✅ Deployed the application publicly to Vercel for testing and access.
+
+## Deployment
+
+The project is publicly available at:
+👉 https://hci-project-pm3otknrd-cikoj77553-7803s-projects.vercel.app/
