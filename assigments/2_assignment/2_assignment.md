@@ -53,33 +53,7 @@
 
 ---
 
-### 👵 **Marija – Active Retiree**  
-![Marija – Active Retiree](https://github.com/bornazuzul/HCI-Project/blob/main/assignments/2_assignment/images/older_user.jpeg)
-- **Age:** 61  
-- **Occupation:** Retired Nurse  
-- **Location:** Split  
-- **Goals:**  
-  - Find volunteering opportunities that allow her to stay social and feel useful  
-  - Share her knowledge and experience with others  
-- **Motivation:** Wants to stay active and connected with the community after retirement  
-- **Frustrations:** Many volunteering activities are not tailored for older adults or require too much physical effort  
-- **Quote:** “I may be retired, but I still have a lot to give.”  
 
---- 
-
-### 👴 **Ivan – Community-Oriented Retiree**  
-![Ivan – Community-Oriented Retiree](https://github.com/bornazuzul/HCI-Project/blob/main/assignments/2_assignment/images/older_user2.jpeg)
-- **Age:** 63  
-- **Occupation:** Retired Electrician  
-- **Location:** Osijek  
-- **Goals:**  
-  - Use his free time to help with practical, hands-on community projects  
-  - Mentor younger volunteers in technical or repair-related activities  
-- **Motivation:** Feels proud when he can apply his lifelong skills to help others  
-- **Frustrations:** Most volunteer opportunities are focused on youth or digital tasks rather than manual or community-based work  
-- **Quote:** “I’ve spent my life fixing things — now I’d like to fix what’s broken in my community.”  
-
----
 
 
 ## 2. Information Architecture
