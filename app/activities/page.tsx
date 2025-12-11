@@ -1,21 +1,21 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Navigation from "@/components/navigation"
-import ActivitiesGrid from "@/components/activities/activities-grid"
-import ActivityFilters from "@/components/activities/activity-filters"
-import CreateActivityButton from "@/components/activities/create-activity-button"
-import { useApp } from "@/app/providers"
+import { useState, Suspense } from "react";
+import Navigation from "@/components/navigation";
+import ActivitiesGrid from "@/components/activities/activities-grid";
+import ActivityFilters from "@/components/activities/activity-filters";
+import CreateActivityButton from "@/components/activities/create-activity-button";
+import { useApp } from "@/app/providers";
 
 export default function ActivitiesPage() {
   const [filters, setFilters] = useState({
     category: "all",
     search: "",
     date: "all",
-  })
-  const { user } = useApp()
-  const isLoggedIn = !!user
-  const userRole = user?.role || null
+  });
+  const { user } = useApp();
+  const isLoggedIn = !!user;
+  const userRole = user?.role || null;
 
   return (
     <div className="min-h-screen bg-background">
@@ -26,27 +26,33 @@ export default function ActivitiesPage() {
           {/* Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
             <div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">Volunteer Activities</h1>
-              <p className="text-muted-foreground">Discover meaningful opportunities to make an impact</p>
+              <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">
+                Volunteer Activities
+              </h1>
+              <p className="text-muted-foreground">
+                Discover meaningful opportunities to make an impact
+              </p>
             </div>
 
             {isLoggedIn && <CreateActivityButton userRole={userRole} />}
           </div>
 
-          {/* Filters and Grid */}
-          <div className="grid lg:grid-cols-4 gap-6">
-            {/* Sidebar Filters */}
-            <div className="lg:col-span-1">
-              <ActivityFilters filters={filters} setFilters={setFilters} />
-            </div>
+          <Suspense fallback={<div>Loading...</div>}>
+            {/* Filters and Grid */}
+            <div className="grid lg:grid-cols-4 gap-6">
+              {/* Sidebar Filters */}
+              <div className="lg:col-span-1">
+                <ActivityFilters filters={filters} setFilters={setFilters} />
+              </div>
 
-            {/* Activities Grid */}
-            <div className="lg:col-span-3">
-              <ActivitiesGrid filters={filters} isLoggedIn={isLoggedIn} />
+              {/* Activities Grid */}
+              <div className="lg:col-span-3">
+                <ActivitiesGrid filters={filters} isLoggedIn={isLoggedIn} />
+              </div>
             </div>
-          </div>
+          </Suspense>
         </div>
       </main>
     </div>
-  )
+  );
 }

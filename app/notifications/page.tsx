@@ -1,4 +1,5 @@
 "use client";
+import { Suspense } from "react";
 import Navigation from "@/components/navigation";
 import NotificationsList from "@/components/notifications/notifications-list";
 import SendNotificationButton from "@/components/notifications/send-notification-button";
@@ -29,8 +30,10 @@ export default function NotificationsPage() {
             {isLoggedIn && <SendNotificationButton />}
           </div>
 
-          {/* Notifications List */}
-          <NotificationsList isLoggedIn={isLoggedIn} userRole={userRole} />
+          <Suspense fallback={<div>Loading...</div>}>
+            {/* Notifications List */}
+            <NotificationsList isLoggedIn={isLoggedIn} userRole={userRole} />
+          </Suspense>
         </div>
       </main>
     </div>
