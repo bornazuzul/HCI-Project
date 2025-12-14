@@ -7,33 +7,12 @@ import Hamburger from "./Hamburger";
 import { useState } from "react";
 import { cn } from "@/lib/cn";
 import { useAuth } from "../_context/AuthContext";
+import { pages as pagesSchema } from "@/db/schema";
 
-type Page = {
-  title: string;
-  path: `/${string}`;
-};
-
-/**
- * pages is an array of objects representing the pages in the web app.
- * Each object contains a title and a path. This array is used to generate the navigation menu.
- *
- * We hardcode pages here, but in real app you want to store and read this information from some external source (e.g. CMS, DB, config file, etc).
- */
-const pages: Page[] = [
-  { title: "Home", path: "/" },
-  {
-    title: "Activities",
-    path: "/activities",
-  },
-  {
-    title: "Notifications",
-    path: "/notifications",
-  },
-  {
-    title: "Admin",
-    path: "/admin",
-  },
-];
+type Page = Omit<
+  typeof pagesSchema.$inferSelect,
+  "includeInProd" | "displayOrder"
+>;
 
 /**
  * Render a page list item.
@@ -75,7 +54,7 @@ function processPage(
   );
 }
 
-export function Navigation() {
+export function Navigation({ pages }: { pages: Page[] }) {
   const currentPath = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const toggleMenu = () => setIsOpen((prev) => !prev);
