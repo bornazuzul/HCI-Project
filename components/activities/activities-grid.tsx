@@ -1,92 +1,72 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import ActivityCard from "./activity-card"
-import { useData } from "@/hooks/use-data"
-import { useApp } from "@/app/providers"
+import Link from "next/link";
 
 interface Filters {
-  category: string
-  search: string
-  date: string
+  category: string;
+  search: string;
+  date: string;
+}
+
+interface Activity {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  date: string;
+  location: string;
 }
 
 interface ActivitiesGridProps {
-  filters: Filters
-  isLoggedIn: boolean
+  activities: Activity[];
+  filters: Filters;
+  isLoggedIn: boolean;
 }
 
-export default function ActivitiesGrid({ filters, isLoggedIn }: ActivitiesGridProps) {
-  const { activities, applyToActivity, unapplyFromActivity, addNotification } = useData()
-  const { user } = useApp()
-  const [localActivities, setLocalActivities] = useState(activities)
-
-  useEffect(() => {
-    setLocalActivities(activities)
-  }, [activities])
-
-  const filteredActivities = localActivities
-    .filter((activity) => activity.status === "approved")
-    .filter((activity) => {
-      if (filters.category !== "all" && activity.category !== filters.category) {
-        return false
-      }
-      if (filters.search && !activity.title.toLowerCase().includes(filters.search.toLowerCase())) {
-        return false
-      }
-      return true
-    })
-
-  const handleApply = (activityId: string) => {
-    if (!user) return
-
-    const activity = activities.find((a) => a.id === activityId)
-    if (!activity) return
-
-    const isAlreadyApplied = activity.applicants.includes(user.id)
-
-    if (isAlreadyApplied) {
-      unapplyFromActivity(activityId, user.id)
-    } else {
-      applyToActivity(activityId, user.id)
-      addNotification({
-        title: `New Application to ${activity.title}`,
-        message: `${user.name} has applied to your activity.`,
-        type: "activity-update",
-        sender: "System",
-        senderRole: "admin",
-        activityId: activityId,
-        activityTitle: activity.title,
-        targetUsers: [activity.organizerId],
-        timestamp: new Date().toLocaleString(),
-      })
-    }
-  }
-
-  if (filteredActivities.length === 0) {
+export default function ActivitiesGrid({
+  activities,
+  filters,
+  isLoggedIn,
+}: ActivitiesGridProps) {
+  if (!activities || activities.length === 0) {
     return (
-      <div className="text-center py-12">
-        <p className="text-lg text-muted-foreground">
-          {filters.search ? "No activities found matching your search." : "No activities available right now."}
-        </p>
+      <div className="text-center py-12 text-muted-foreground">
+        No activities available.
       </div>
-    )
+    );
   }
+
+  // Optional: client-side filtering
+  const filteredActivities = activities.filter((activity) => {
+    if (filters.category !== "all" && activity.category !== filters.category) {
+      return false;
+    }
+
+    if (
+      filters.search &&
+      !activity.title.toLowerCase().includes(filters.search.toLowerCase())
+    ) {
+      return false;
+    }
+
+    return true;
+  });
 
   return (
-    <div className="grid md:grid-cols-2 gap-6">
+    <div className="grid md:grid-cols-3 gap-6">
       {filteredActivities.map((activity) => (
-        <ActivityCard
+        <Link
           key={activity.id}
-          activity={{
-            ...activity,
-            applicants: activity.applicants.length,
-            isApplied: user ? activity.applicants.includes(user.id) : false,
-          }}
-          onApply={handleApply}
-          isLoggedIn={isLoggedIn}
-        />
+          href={`/activities/${activity.id}`}
+          className="border rounded-lg p-4 hover:shadow transition"
+        >
+          <h2 className="font-semibold text-lg">{activity.title}</h2>
+          <p className="text-sm text-muted-foreground">
+            {activity.description}
+          </p>
+          <p className="text-xs mt-2">{activity.location}</p>
+        </Link>
       ))}
     </div>
-  )
+  );
 }
