@@ -1,11 +1,11 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import Logo from "./Logo";
-import Hamburger from "./Hamburger";
 import { useState } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { Menu, X, Users, Bell } from "lucide-react";
 import { cn } from "@/lib/cn";
+import Logo from "./Logo";
 import { useAuth } from "../_context/AuthContext";
 import { pages as pagesSchema } from "@/db/schema";
 
@@ -14,97 +14,140 @@ type Page = Omit<
   "includeInProd" | "displayOrder"
 >;
 
-/**
- * Render a page list item.
- * @param page - { title, path } for the page
- * @param index - array index used for key
- * @param currentPath - current pathname to determine active state
- * @param onClickHandler - optional click handler for closing menu
- * @returns JSX element for a list item
- */
-function processPage(
-  page: Page,
-  index: number,
-  currentPath?: string,
-  onClickHandler?: () => void
-) {
-  // Check if the current path matches the page path
-  // For home page ("/"), use exact match to avoid matching all routes
-  // For other pages, check if current path starts with the page path to support nested routes
-  const isActive =
-    page.path === "/"
-      ? currentPath === page.path
-      : currentPath?.startsWith(page.path);
-
-  return (
-    <li key={index}>
-      <Link href={page.path} onClick={onClickHandler}>
-        <span
-          className={cn(
-            "border rounded-sm border-transparent px-4 py-3 whitespace-nowrap hover:text-white hover:bg-brand",
-            {
-              "text-brand border-brand": isActive,
-            }
-          )}
-        >
-          {page.title}
-        </span>
-      </Link>
-    </li>
-  );
+interface NavigationProps {
+  pages: Page[];
 }
 
-export function Navigation({ pages }: { pages: Page[] }) {
-  const currentPath = usePathname();
+export function Navigation({ pages }: NavigationProps) {
+  const pathname = usePathname();
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const toggleMenu = () => setIsOpen((prev) => !prev);
   const { user, login, logout } = useAuth();
 
-  // Demo login handler
+  const toggleMenu = () => setIsOpen((prev) => !prev);
+
   const handleLogin = () => {
     login({ username: "jdoe", email: "jdoe@example.com" });
+    setIsOpen(false);
   };
 
+  const handleLogout = () => {
+    logout();
+    setIsOpen(false);
+    router.push("/");
+  };
+
+  const isActive = (path: string) => {
+    if (path === "/") return pathname === "/";
+    return pathname.startsWith(path);
+  };
+
+  const desktopLinkClass = (path: string) =>
+    cn(
+      "text-foreground hover:text-primary transition-colors font-medium border-b-2 pb-1",
+      isActive(path) ? "border-primary text-primary" : "border-transparent"
+    );
+
+  const mobileLinkClass = (path: string) =>
+    cn(
+      "block px-4 py-2 rounded-lg font-medium transition-colors",
+      isActive(path)
+        ? "bg-primary text-primary-foreground"
+        : "text-foreground hover:bg-muted"
+    );
+
   return (
-    <nav className="flex flex-1 justify-between items-center p-8 border-b border-brand-stroke-weak">
-      <Link href="/">
-        <Logo />
-      </Link>
-      {/* Hidden on mobile */}
-      <ul className="hidden md:flex justify-between space-x-4 text-sm uppercase text-brand-text-strong">
-        {pages.map((page, index) => processPage(page, index, currentPath))}
-      </ul>
-      <div className="flex items-center space-x-4">
-        {user ? (
-          <>
-            <span className="text-normal text-brand">{user.username}</span>
-            <button
-              className="px-2 py-2 uppercase text-normal rounded bg-brand text-white hover:bg-brand-stroke-strong"
-              onClick={logout}
-            >
-              Logout
-            </button>
-          </>
-        ) : (
+    <nav className="fixed top-0 w-full bg-background border-b border-border shadow-sm z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center">
+              <Users className="w-5 h-5 text-primary-foreground" />
+            </div>
+            <span className="hidden sm:inline font-bold text-lg text-foreground">
+              VolunMe
+            </span>
+          </Link>
+
+          {/* Desktop Navigation */}
+          <ul className="hidden md:flex gap-8">
+            {pages.map((page) => (
+              <li key={page.path}>
+                <Link href={page.path} className={desktopLinkClass(page.path)}>
+                  {page.title}
+                </Link>
+              </li>
+            ))}
+          </ul>
+
+          {/* Auth - Desktop */}
+          <div className="hidden md:flex items-center gap-3">
+            {user ? (
+              <>
+                <span className="text-sm font-medium text-foreground">
+                  {user.username}
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className="px-3 py-1.5 rounded-md text-sm border border-border hover:bg-muted transition"
+                >
+                  Sign out
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={handleLogin}
+                className="px-3 py-1.5 rounded-md text-sm bg-primary text-primary-foreground hover:bg-primary/90 transition"
+              >
+                Sign in
+              </button>
+            )}
+          </div>
+
+          {/* Mobile Menu Button */}
           <button
-            className="px-2 py-2 uppercase text-normal rounded bg-brand text-white hover:bg-brand-stroke-strong"
-            onClick={handleLogin}
+            onClick={toggleMenu}
+            className="md:hidden p-2 rounded-lg hover:bg-muted transition-colors"
+            aria-label="Toggle menu"
           >
-            Login
+            {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
+        </div>
+
+        {/* Mobile Navigation */}
+        {isOpen && (
+          <div className="md:hidden border-t border-border py-4 space-y-3">
+            {pages.map((page) => (
+              <Link
+                key={page.path}
+                href={page.path}
+                className={mobileLinkClass(page.path)}
+                onClick={() => setIsOpen(false)}
+              >
+                {page.title}
+              </Link>
+            ))}
+
+            <div className="border-t border-border pt-3 px-4 space-y-2">
+              {user ? (
+                <button
+                  onClick={handleLogout}
+                  className="w-full px-3 py-2 rounded-md border border-border hover:bg-muted transition"
+                >
+                  Sign out
+                </button>
+              ) : (
+                <button
+                  onClick={handleLogin}
+                  className="w-full px-3 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition"
+                >
+                  Sign in
+                </button>
+              )}
+            </div>
+          </div>
         )}
-        {/* Visible on mobile */}
-        <Hamburger isOpen={isOpen} onClick={toggleMenu} />
-        <ul
-          className={cn(
-            "flex md:hidden flex-col absolute top-full left-0 items-center w-full bg-brand-fill-bg p-8 space-y-8 text-sm uppercase text-brand-text-strong border-b border-brand-stroke-weak",
-            { hidden: !isOpen }
-          )}
-        >
-          {pages.map((page, index) =>
-            processPage(page, index, currentPath, toggleMenu)
-          )}
-        </ul>
       </div>
     </nav>
   );
