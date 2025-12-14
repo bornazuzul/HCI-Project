@@ -5,8 +5,9 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Menu, X, Users, Bell } from "lucide-react";
 import { cn } from "@/lib/cn";
-import Logo from "./Logo";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "../_context/AuthContext";
+import { useApp } from "@/app/providers";
 import { pages as pagesSchema } from "@/db/schema";
 
 type Page = Omit<
@@ -22,14 +23,9 @@ export function Navigation({ pages }: NavigationProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const { user, login, logout } = useAuth();
+  const { user, login, logout } = useApp();
 
   const toggleMenu = () => setIsOpen((prev) => !prev);
-
-  const handleLogin = () => {
-    login({ username: "jdoe", email: "jdoe@example.com" });
-    setIsOpen(false);
-  };
 
   const handleLogout = () => {
     logout();
@@ -56,6 +52,15 @@ export function Navigation({ pages }: NavigationProps) {
         : "text-foreground hover:bg-muted"
     );
 
+  const getMobileLinkClass = (href: string) => {
+    const isActivePath = isActive(href);
+    return `block px-4 py-2 rounded-lg font-medium transition-colors ${
+      isActivePath
+        ? "bg-primary text-primary-foreground"
+        : "text-foreground hover:bg-muted"
+    }`;
+  };
+
   return (
     <nav className="fixed top-0 w-full bg-background border-b border-border shadow-sm z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -72,36 +77,48 @@ export function Navigation({ pages }: NavigationProps) {
 
           {/* Desktop Navigation */}
           <ul className="hidden md:flex gap-8">
-            {pages.map((page) => (
-              <li key={page.path}>
-                <Link href={page.path} className={desktopLinkClass(page.path)}>
-                  {page.title}
-                </Link>
-              </li>
-            ))}
+            {pages
+              .filter((page) => {
+                // Hide admin page if user is not admin
+                if (page.path === "/admin" && user?.role !== "admin") {
+                  return false;
+                }
+                return true;
+              })
+              .map((page) => (
+                <li key={page.path}>
+                  <Link
+                    href={page.path}
+                    className={desktopLinkClass(page.path)}
+                  >
+                    {page.title}
+                  </Link>
+                </li>
+              ))}
           </ul>
 
           {/* Auth - Desktop */}
           <div className="hidden md:flex items-center gap-3">
             {user ? (
-              <>
-                <span className="text-sm font-medium text-foreground">
-                  {user.username}
-                </span>
-                <button
-                  onClick={handleLogout}
-                  className="px-3 py-1.5 rounded-md text-sm border border-border hover:bg-muted transition"
-                >
+              <div className="flex items-center gap-2">
+                <div className="flex items-center justify-center w-9 h-9 rounded-full bg-primary text-primary-foreground font-semibold text-sm">
+                  {user.name.charAt(0).toUpperCase()}
+                </div>
+                <Button variant="outline" size="sm" onClick={handleLogout}>
                   Sign out
-                </button>
-              </>
+                </Button>
+              </div>
             ) : (
-              <button
-                onClick={handleLogin}
-                className="px-3 py-1.5 rounded-md text-sm bg-primary text-primary-foreground hover:bg-primary/90 transition"
-              >
-                Sign in
-              </button>
+              <>
+                <Link href="/login">
+                  <Button variant="outline" size="sm">
+                    Sign in
+                  </Button>
+                </Link>
+                <Link href="/register">
+                  <Button size="sm">Sign up</Button>
+                </Link>
+              </>
             )}
           </div>
 
@@ -118,32 +135,56 @@ export function Navigation({ pages }: NavigationProps) {
         {/* Mobile Navigation */}
         {isOpen && (
           <div className="md:hidden border-t border-border py-4 space-y-3">
-            {pages.map((page) => (
-              <Link
-                key={page.path}
-                href={page.path}
-                className={mobileLinkClass(page.path)}
-                onClick={() => setIsOpen(false)}
-              >
-                {page.title}
+            <Link href="/" className={getMobileLinkClass("/")}>
+              Home
+            </Link>
+            <Link
+              href="/activities"
+              className={getMobileLinkClass("/activities")}
+            >
+              Activities
+            </Link>
+            <Link
+              href="/notifications"
+              className={getMobileLinkClass("/notifications")}
+            >
+              <div className="flex items-center gap-2">
+                <Bell className="w-4 h-4" />
+                <span>Notifications</span>
+              </div>
+            </Link>
+            {user?.role === "admin" && (
+              <Link href="/admin" className={getMobileLinkClass("/admin")}>
+                Admin
               </Link>
-            ))}
-
+            )}
             <div className="border-t border-border pt-3 px-4 space-y-2">
               {user ? (
-                <button
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full bg-transparent"
                   onClick={handleLogout}
-                  className="w-full px-3 py-2 rounded-md border border-border hover:bg-muted transition"
                 >
                   Sign out
-                </button>
+                </Button>
               ) : (
-                <button
-                  onClick={handleLogin}
-                  className="w-full px-3 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition"
-                >
-                  Sign in
-                </button>
+                <>
+                  <Link href="/login" className="block">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full bg-transparent"
+                    >
+                      Sign in
+                    </Button>
+                  </Link>
+                  <Link href="/register" className="block">
+                    <Button size="sm" className="w-full">
+                      Sign up
+                    </Button>
+                  </Link>
+                </>
               )}
             </div>
           </div>

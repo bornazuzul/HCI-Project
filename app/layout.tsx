@@ -22,7 +22,7 @@ const lato = Lato({
 });
 
 export const metadata: Metadata = {
-  title: "VolunMe.",
+  title: "VolunMe",
   description: "Help others, build friendships, and make a real difference.",
 };
 
@@ -49,7 +49,7 @@ export default async function RootLayout({
             <header className="fixed top-0 left-0 right-0 z-50 bg-brand-fill-bg border-b border-brand-stroke-weak">
               <Navigation pages={pages} />
             </header>
-            <main className="pt-28">
+            <main className="pt-16">
               <NuqsAdapter>{children}</NuqsAdapter>
             </main>
           </AppProvider>

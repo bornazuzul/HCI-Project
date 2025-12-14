@@ -5,6 +5,7 @@ import { createContext, useContext, useState, ReactNode } from "react";
 export type AuthUser = {
   username: string;
   email: string;
+  role: string;
 };
 
 export type AuthContextType = {
