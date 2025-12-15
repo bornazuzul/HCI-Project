@@ -1,108 +1,79 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { Card } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-
-interface Filters {
-  category: string
-  search: string
-  date: string
-}
+import { useQueryState, parseAsString } from "nuqs";
+import { useEffect, useState } from "react";
 
 interface ActivityFiltersProps {
-  filters: Filters
-  setFilters: (filters: Filters) => void
+  initialCategory: string;
+  categories: string[];
 }
 
-export default function ActivityFilters({ filters, setFilters }: ActivityFiltersProps) {
-  const categories = [
-    { value: "all", label: "All Categories" },
-    { value: "health", label: "Health & Medical" },
-    { value: "environment", label: "Environment" },
-    { value: "education", label: "Education" },
-    { value: "community", label: "Community" },
-    { value: "disaster", label: "Disaster Relief" },
-    { value: "animals", label: "Animals" },
-  ]
+export default function ActivityFilters({
+  initialCategory,
+  categories,
+}: ActivityFiltersProps) {
+  const [category, setCategory] = useQueryState(
+    "category",
+    parseAsString.withDefault("").withOptions({ shallow: false })
+  );
 
-  const dateOptions = [
-    { value: "all", label: "Any Time" },
-    { value: "today", label: "Today" },
-    { value: "week", label: "This Week" },
-    { value: "month", label: "This Month" },
-    { value: "upcoming", label: "Upcoming" },
-  ]
+  const [search, setSearch] = useState("");
+  const [localCategory, setLocalCategory] = useState(initialCategory);
+
+  // Sync local state with URL when it changes
+  useEffect(() => {
+    setLocalCategory(category || "all");
+  }, [category]);
 
   const handleCategoryChange = (value: string) => {
-    setFilters({ ...filters, category: value })
-  }
+    const newCategory = value === "all" ? null : value;
+    setCategory(newCategory);
+  };
 
-  const handleDateChange = (value: string) => {
-    setFilters({ ...filters, date: value })
-  }
+  const handleClearFilters = () => {
+    setCategory(null);
+    setSearch("");
+  };
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFilters({ ...filters, search: e.target.value })
-  }
-
-  const handleReset = () => {
-    setFilters({ category: "all", search: "", date: "all" })
-  }
+  const hasActiveFilters = category || search;
 
   return (
-    <div className="space-y-4 sticky top-24">
-      <Card className="p-6">
-        <h3 className="font-semibold text-foreground mb-4">Filters</h3>
+    <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+      <div>
+        <label className="block text-sm font-medium mb-2 text-gray-700">
+          Filter by Category
+        </label>
+        <select
+          value={localCategory}
+          onChange={(e) => handleCategoryChange(e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="all">All Categories</option>
+          {categories.map((cat) => (
+            <option key={cat} value={cat}>
+              {cat}
+            </option>
+          ))}
+        </select>
+      </div>
 
-        {/* Search */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-foreground mb-2">Search</label>
-          <Input type="text" placeholder="Search activities..." value={filters.search} onChange={handleSearchChange} />
+      {hasActiveFilters && (
+        <div className="pt-4 border-t border-gray-200">
+          <button
+            onClick={handleClearFilters}
+            className="w-full px-3 py-2 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+          >
+            Clear All Filters
+          </button>
         </div>
+      )}
 
-        {/* Category */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-foreground mb-2">Category</label>
-          <Select value={filters.category} onValueChange={handleCategoryChange}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {categories.map((cat) => (
-                <SelectItem key={cat.value} value={cat.value}>
-                  {cat.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Date */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-foreground mb-2">Date</label>
-          <Select value={filters.date} onValueChange={handleDateChange}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {dateOptions.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Reset Button */}
-        <Button variant="outline" size="sm" className="w-full bg-transparent" onClick={handleReset}>
-          Reset Filters
-        </Button>
-      </Card>
+      <div className="pt-4 border-t border-gray-200">
+        <p className="text-xs text-gray-500">
+          <strong>Tip:</strong> Category filters update the URL and trigger
+          server reload
+        </p>
+      </div>
     </div>
-  )
+  );
 }
