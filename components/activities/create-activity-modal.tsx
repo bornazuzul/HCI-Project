@@ -22,7 +22,6 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useApp } from "@/app/providers";
 import { cn } from "@/lib/utils";
-import { createUserActivity } from "@/lib/api/user-activities";
 
 interface CreateActivityModalProps {
   isOpen: boolean;
@@ -124,14 +123,14 @@ export default function CreateActivityModal({
     setServerError(null);
     setFieldErrors({});
 
-    // Final validation check
-    if (!validateForm() || !user || !isFormValid) {
+    // Final validation check - ONLY check form validation, not user
+    if (!validateForm() || !isFormValid) {
       setIsSubmitting(false);
       return;
     }
 
     try {
-      // Call the REST API endpoint
+      // Call the REST API endpoint - DO NOT send organizer info
       const response = await fetch("/api/activities", {
         method: "POST",
         headers: {
@@ -145,9 +144,8 @@ export default function CreateActivityModal({
           time: formData.time,
           location: formData.location,
           maxApplicants: Number(formData.maxApplicants),
-          organizerId: user.id,
-          organizerName: user.name,
-          organizerEmail: user.email,
+          // REMOVED: organizerId, organizerName, organizerEmail
+          // These are now handled by the API using Supabase Auth
         }),
       });
 

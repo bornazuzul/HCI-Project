@@ -39,10 +39,20 @@ export const activities = pgTable("activities", {
   time: text("time").notNull(),
   location: text("location").notNull(),
   maxApplicants: integer("max_applicants").notNull(),
-  organizerId: uuid("organizer_id"),
+  organizerId: uuid("organizer_id").references(() => profiles.id, {
+    onDelete: "set null",
+  }), // Foreign key
+  createdAt: timestamp("created_at").defaultNow(),
+  status: text("status").notNull(),
   organizerName: text("organizer_name"),
   organizerEmail: text("organizer_email"),
-  status: text("status").notNull().default("pending"),
+});
+
+export const profiles = pgTable("profiles", {
+  id: uuid("id").primaryKey(),
+  email: text("email").notNull().unique(),
+  name: text("name"),
+  role: text("role").default("user"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
