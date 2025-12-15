@@ -1,5 +1,3 @@
-import type React from "react";
-
 import { useState, useEffect, useRef, useMemo } from "react";
 import {
   X,
@@ -22,9 +20,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useData } from "@/hooks/use-data";
 import { useApp } from "@/app/providers";
 import { cn } from "@/lib/utils";
+import { createUserActivity } from "@/lib/api/user-activities";
 
 interface CreateActivityModalProps {
   isOpen: boolean;
@@ -41,12 +39,21 @@ interface FormValidation {
   maxApplicants: { isValid: boolean; isTouched: boolean; error: string };
 }
 
+interface ApiResponse {
+  success: boolean;
+  message?: string;
+  error?: string;
+  data?: {
+    id: string;
+    title: string;
+    status: string;
+  };
+}
+
 export default function CreateActivityModal({
   isOpen,
   onClose,
-  onActivityCreated,
 }: CreateActivityModalProps) {
-  const { addActivity } = useData();
   const { user } = useApp();
   const [formData, setFormData] = useState({
     title: "",
@@ -60,6 +67,8 @@ export default function CreateActivityModal({
 
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [validation, setValidation] = useState<FormValidation>({
     title: { isValid: false, isTouched: false, error: "" },
     description: { isValid: false, isTouched: false, error: "" },
@@ -108,6 +117,95 @@ export default function CreateActivityModal({
     const validCount = fields.filter((field) => field.isValid).length;
     return Math.round((validCount / fields.length) * 100);
   }, [validation]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setServerError(null);
+    setFieldErrors({});
+
+    // Final validation check
+    if (!validateForm() || !user || !isFormValid) {
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      // Call the REST API endpoint
+      const response = await fetch("/api/activities", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: formData.title,
+          description: formData.description,
+          category: formData.category,
+          date: formData.date,
+          time: formData.time,
+          location: formData.location,
+          maxApplicants: Number(formData.maxApplicants),
+          organizerId: user.id,
+          organizerName: user.name,
+          organizerEmail: user.email,
+        }),
+      });
+
+      const result: ApiResponse = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(
+          result.error || result.message || "Failed to create activity"
+        );
+      }
+
+      setSubmitted(true);
+
+      // Reset form and close modal
+      setTimeout(() => {
+        setFormData({
+          title: "",
+          description: "",
+          category: "community",
+          date: "",
+          time: "",
+          location: "",
+          maxApplicants: "30",
+        });
+        setSubmitted(false);
+        setIsSubmitting(false);
+        onClose();
+
+        // Refresh the page to show the new activity
+        window.location.reload();
+      }, 2000);
+    } catch (error) {
+      console.error("Error creating activity:", error);
+      setServerError(
+        error instanceof Error ? error.message : "Failed to create activity"
+      );
+      setIsSubmitting(false);
+    }
+  };
+
+  const getInputStatus = (field: keyof FormValidation) => {
+    const fieldValidation = validation[field];
+    const serverError = fieldErrors[field];
+
+    if (serverError) {
+      return "border-red-500 focus:border-red-600 focus:ring-1 focus:ring-red-500";
+    }
+
+    if (!fieldValidation.isTouched) {
+      return "border-border focus:border-primary focus:ring-1 focus:ring-primary";
+    }
+
+    if (fieldValidation.isValid) {
+      return "border-green-500 focus:border-green-600 focus:ring-1 focus:ring-green-500";
+    }
+
+    return "border-red-500 focus:border-red-600 focus:ring-1 focus:ring-red-500";
+  };
 
   // Close on Escape key
   useEffect(() => {
@@ -237,68 +335,6 @@ export default function CreateActivityModal({
     return isValid;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    // Final validation check
-    if (!validateForm() || !user || !isFormValid) {
-      setIsSubmitting(false);
-      return;
-    }
-
-    try {
-      addActivity({
-        title: formData.title,
-        description: formData.description,
-        category: formData.category,
-        date: formData.date,
-        time: formData.time,
-        location: formData.location,
-        maxApplicants: Number.parseInt(formData.maxApplicants),
-        status: "pending",
-        organizerId: user.id,
-        organizerName: user.name,
-        organizerEmail: user.email,
-        image: "/placeholder.jpg",
-      });
-
-      setSubmitted(true);
-
-      setTimeout(() => {
-        setFormData({
-          title: "",
-          description: "",
-          category: "community",
-          date: "",
-          time: "",
-          location: "",
-          maxApplicants: "30",
-        });
-        setSubmitted(false);
-        setIsSubmitting(false);
-        onActivityCreated?.();
-        onClose();
-      }, 2000);
-    } catch (error) {
-      setIsSubmitting(false);
-    }
-  };
-
-  const getInputStatus = (field: keyof FormValidation) => {
-    const fieldValidation = validation[field];
-
-    if (!fieldValidation.isTouched) {
-      return "border-border focus:border-primary focus:ring-1 focus:ring-primary";
-    }
-
-    if (fieldValidation.isValid) {
-      return "border-green-500 focus:border-green-600 focus:ring-1 focus:ring-green-500";
-    }
-
-    return "border-red-500 focus:border-red-600 focus:ring-1 focus:ring-red-500";
-  };
-
   const getIcon = (field: string) => {
     switch (field) {
       case "title":
@@ -346,6 +382,23 @@ export default function CreateActivityModal({
               <X className="w-5 h-5" />
             </button>
           </div>
+
+          {serverError && (
+            <div className="p-6 border-b border-border bg-red-50">
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-sm">
+                  {serverError}
+                </AlertDescription>
+              </Alert>
+            </div>
+          )}
+
+          {Object.entries(fieldErrors).map(([field, error]) => (
+            <p key={field} className="text-red-500 text-xs mt-1">
+              {error}
+            </p>
+          ))}
 
           {/* Form Progress Indicator */}
           {!submitted && (

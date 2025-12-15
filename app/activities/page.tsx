@@ -6,6 +6,10 @@ import {
   getActivitiesCount,
 } from "@/lib/api/activities";
 import { loadActivitiesSearchParams } from "@/lib/activities-search-params";
+import {
+  getApprovedActivitiesPaginated,
+  getActivityCounts,
+} from "@/lib/api/user-activities";
 import { SearchParams } from "nuqs";
 
 interface ActivitiesPageSearchParams {
@@ -18,15 +22,17 @@ export default async function ActivitiesPage({
   searchParams,
 }: ActivitiesPageSearchParams) {
   const { page, category } = await loadActivitiesSearchParams(searchParams);
+  // Validate inputs
+  const validatedPage = Math.max(1, page);
+  const categoryFilter = category?.trim() || undefined;
+
+  // Fetch ONLY approved activities and count
+  const [activities, totalActivities] = await Promise.all([
+    getApprovedActivitiesPaginated(validatedPage, PAGE_SIZE, categoryFilter),
+    getActivityCounts().then((counts) => counts.approved), // Only count approved
+  ]);
 
   const uiCategory = category === "" ? "all" : category;
-
-  const validatedPage = Math.max(1, page);
-
-  const [activities, totalActivities] = await Promise.all([
-    getActivitiesPaginated(validatedPage, PAGE_SIZE, category || undefined),
-    getActivitiesCount(category || undefined),
-  ]);
 
   const totalPages = Math.max(1, Math.ceil(totalActivities / PAGE_SIZE));
 
