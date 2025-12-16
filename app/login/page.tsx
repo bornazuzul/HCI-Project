@@ -1,30 +1,38 @@
 "use client";
+import { useState } from "react";
 import Link from "next/link";
 import { useApp } from "@/app/providers";
 import LoginForm from "@/components/auth/login-form";
 import { ArrowLeft, Shield, Users, Heart, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 export default function LoginPage() {
   const { login } = useApp();
+  const [error, setError] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async (email: string, password: string) => {
+    setIsLoading(true);
+    setError("");
+
     try {
-      await login(email, password, "user");
-      // Use window.location instead of router
+      await login(email, password);
       window.location.href = "/";
-    } catch (error) {
-      console.error("Login failed:", error);
+    } catch (err: any) {
+      console.error("Login failed:", err);
+      setError(err.message || "Login failed. Please check your credentials.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleBack = () => {
-    // Navigate back using window.history
     if (window.history.length > 1) {
       window.history.back();
     } else {
-      // Fallback to home if no history
       window.location.href = "/";
     }
   };
@@ -44,6 +52,16 @@ export default function LoginPage() {
             Return to Safety
           </Button>
         </div>
+
+        {/* Error Alert */}
+        {error && (
+          <div className="mb-6">
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          </div>
+        )}
 
         <div className="grid md:grid-cols-2 gap-8 items-start">
           {/* Left Column - Information */}

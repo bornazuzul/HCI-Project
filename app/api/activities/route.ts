@@ -1,25 +1,30 @@
-// app/api/activities/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { activities, profiles } from "@/db/schema";
 import { z } from "zod";
-import { eq, asc, sql } from "drizzle-orm";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { eq, asc, sql, and } from "drizzle-orm";
 
-// Validation schema - client only sends activity data, user comes from auth
 const createActivitySchema = z.object({
   title: z
     .string()
     .min(3, "Title must be at least 3 characters")
-    .max(100, "Title is too long"),
+    .max(200, "Title is too long"),
   description: z
     .string()
     .min(20, "Please provide more details (min 20 characters)")
-    .max(500, "Description is too long"),
-  category: z.string(),
-  date: z.string(),
-  time: z.string(),
+    .max(2000, "Description is too long"),
+  category: z.enum([
+    "sports",
+    "education",
+    "community",
+    "environment",
+    "health",
+    "other",
+  ]),
+  date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format"),
+  time: z.string().regex(/^\d{2}:\d{2}$/, "Time must be in HH:MM format"),
   location: z.string().min(3, "Please provide a valid location"),
   maxApplicants: z
     .number()
@@ -27,198 +32,20 @@ const createActivitySchema = z.object({
     .max(500, "Maximum 500 volunteers"),
 });
 
-// POST /api/activities - Create a new activity
-export async function POST(request: NextRequest) {
-  try {
-    // Get Supabase client for authentication
-    const cookieStore = cookies();
+// Type for activity form data
+type ActivityFormData = z.infer<typeof createActivitySchema>;
 
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            );
-          },
-        },
-      }
-    );
-
-    // Get authenticated user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      console.error("Auth error:", authError);
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Authentication required. Please log in.",
-        },
-        { status: 401 }
-      );
-    }
-
-    // Parse the request body
-    const body = await request.json();
-
-    // Validate activity data (doesn't include user info)
-    const validationResult = createActivitySchema.safeParse(body);
-
-    if (!validationResult.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Validation failed",
-          details: validationResult.error.errors,
-        },
-        { status: 400 }
-      );
-    }
-
-    // Get or create user profile
-    let profile = await db
-      .select()
-      .from(profiles)
-      .where(eq(profiles.id, user.id))
-      .then((res) => res[0]);
-
-    // If profile doesn't exist, create one
-    if (!profile) {
-      console.log("Creating new profile for user:", user.id);
-      const [newProfile] = await db
-        .insert(profiles)
-        .values({
-          id: user.id,
-          email: user.email || "unknown@example.com",
-          name: user.user_metadata?.name || "Anonymous User",
-          role: "user",
-          createdAt: new Date(),
-        })
-        .returning();
-
-      profile = newProfile;
-    }
-
-    if (!profile) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Failed to create or find user profile",
-        },
-        { status: 500 }
-      );
-    }
-
-    const {
-      title,
-      description,
-      category,
-      date,
-      time,
-      location,
-      maxApplicants,
-    } = validationResult.data;
-
-    // Additional date validation
-    const selectedDate = new Date(date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    if (selectedDate < today) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Date cannot be in the past",
-        },
-        { status: 400 }
-      );
-    }
-
-    // Insert into database
-    const [activity] = await db
-      .insert(activities)
-      .values({
-        title,
-        description,
-        category,
-        date,
-        time,
-        location,
-        maxApplicants,
-        organizerId: profile.id, // Use the UUID from profiles
-        organizerName: profile.name || "Anonymous",
-        organizerEmail: profile.email,
-        status: "pending",
-        createdAt: new Date(),
-      })
-      .returning();
-
-    // Return success response
-    return NextResponse.json(
-      {
-        success: true,
-        message: "Activity submitted successfully for review",
-        data: {
-          id: activity.id,
-          title: activity.title,
-          category: activity.category,
-          date: activity.date,
-          status: activity.status,
-        },
-      },
-      { status: 201 }
-    );
-  } catch (error: any) {
-    console.error("Error creating activity:", error);
-
-    // Provide user-friendly error messages
-    let errorMessage = "Failed to create activity";
-    let statusCode = 500;
-
-    if (error.code === "23505") {
-      errorMessage = "An activity with similar details already exists";
-      statusCode = 409;
-    } else if (error.code === "22P02") {
-      errorMessage = "Invalid data format";
-      statusCode = 400;
-    } else if (error.message?.includes("foreign key")) {
-      errorMessage = "User profile not found. Please complete your profile.";
-      statusCode = 400;
-    }
-
-    return NextResponse.json(
-      {
-        success: false,
-        error: errorMessage,
-        details:
-          process.env.NODE_ENV === "development" ? error.message : undefined,
-      },
-      { status: statusCode }
-    );
-  }
-}
-
-// GET /api/activities - Get all approved activities with pagination
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get("category");
+    const status = searchParams.get("status") || "approved";
+    const organizerId = searchParams.get("organizerId");
     const page = parseInt(searchParams.get("page") || "1");
     const pageSize = parseInt(searchParams.get("pageSize") || "6");
-    const status = searchParams.get("status") || "approved"; // Default to approved
 
     const offset = (page - 1) * pageSize;
 
-    // Build query
     let query = db
       .select({
         id: activities.id,
@@ -229,27 +56,33 @@ export async function GET(request: NextRequest) {
         time: activities.time,
         location: activities.location,
         maxApplicants: activities.maxApplicants,
+        currentApplicants: activities.currentApplicants,
         organizerId: activities.organizerId,
         organizerName: activities.organizerName,
         organizerEmail: activities.organizerEmail,
         status: activities.status,
         createdAt: activities.createdAt,
+        updatedAt: activities.updatedAt,
       })
       .from(activities)
       .where(eq(activities.status, status));
 
-    // Apply category filter if provided and not "all"
+    // Apply filters
     if (category && category !== "all") {
       query = query.where(eq(activities.category, category));
     }
 
-    // Execute query with pagination
+    if (organizerId) {
+      query = query.where(eq(activities.organizerId, organizerId));
+    }
+
+    // Execute query
     const data = await query
-      .orderBy(asc(activities.date))
+      .orderBy(asc(activities.date), asc(activities.time))
       .limit(pageSize)
       .offset(offset);
 
-    // Get total count for pagination
+    // Get total count
     let countQuery = db
       .select({ count: sql<number>`count(*)` })
       .from(activities)
@@ -257,6 +90,10 @@ export async function GET(request: NextRequest) {
 
     if (category && category !== "all") {
       countQuery = countQuery.where(eq(activities.category, category));
+    }
+
+    if (organizerId) {
+      countQuery = countQuery.where(eq(activities.organizerId, organizerId));
     }
 
     const countResult = await countQuery;
@@ -270,18 +107,173 @@ export async function GET(request: NextRequest) {
         pageSize,
         total,
         totalPages: Math.ceil(total / pageSize),
+        hasNextPage: page * pageSize < total,
+        hasPrevPage: page > 1,
       },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error fetching activities:", error);
+
+    // Return empty response for now
+    return NextResponse.json({
+      success: true,
+      data: [],
+      pagination: {
+        page: 1,
+        pageSize: 6,
+        total: 0,
+        totalPages: 0,
+        hasNextPage: false,
+        hasPrevPage: false,
+      },
+    });
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    // Parse request body
+    const body = await request.json();
+
+    // Expect userId to be sent from client
+    const { userId, ...activityData } = body;
+
+    if (!userId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Authentication required. Please log in.",
+        },
+        { status: 401 }
+      );
+    }
+
+    // Validate the activity data
+    const validationResult = createActivitySchema.safeParse(activityData);
+    if (!validationResult.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Validation failed",
+          details: validationResult.error.errors,
+        },
+        { status: 400 }
+      );
+    }
+
+    const validatedData = validationResult.data;
+
+    // Date validation
+    const selectedDate = new Date(validatedData.date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (selectedDate < today) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Date cannot be in the past",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Get user profile
+    const profile = await db
+      .select()
+      .from(profiles)
+      .where(eq(profiles.id, userId))
+      .then((res) => res[0]);
+
+    if (!profile) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "User profile not found. Please complete your profile first.",
+        },
+        { status: 404 }
+      );
+    }
+
+    // Check if user has a name
+    if (!profile.name || profile.name.trim() === "") {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Please complete your profile name before creating activities.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const [activity] = await db
+      .insert(activities)
+      .values({
+        title: validatedData.title,
+        description: validatedData.description,
+        category: validatedData.category,
+        date: validatedData.date,
+        time: validatedData.time,
+        location: validatedData.location,
+        maxApplicants: validatedData.maxApplicants,
+        currentApplicants: 0, // Initialize to 0
+        organizerId: profile.id,
+        organizerName: profile.name,
+        organizerEmail: profile.email,
+        status: "pending",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Activity submitted successfully for review",
+        data: {
+          id: activity.id,
+          title: activity.title,
+          category: activity.category,
+          date: activity.date,
+          status: activity.status,
+          organizerName: activity.organizerName,
+        },
+      },
+      { status: 201 }
+    );
+  } catch (error: any) {
+    console.error("Error creating activity:", error);
+
+    // Handle specific errors
+    let errorMessage = "Failed to create activity";
+    let statusCode = 500;
+
+    if (error.message?.includes("foreign key")) {
+      errorMessage = "User profile issue. Please try logging in again.";
+      statusCode = 400;
+    } else if (
+      error.message?.includes("duplicate key") ||
+      error.code === "23505"
+    ) {
+      errorMessage = "An activity with similar details already exists.";
+      statusCode = 409;
+    } else if (
+      error.message?.includes("null value") ||
+      error.code === "23502"
+    ) {
+      errorMessage = "Missing required information. Please check all fields.";
+      statusCode = 400;
+    }
+
     return NextResponse.json(
       {
         success: false,
-        error: "Failed to fetch activities",
+        error: errorMessage,
         details:
           process.env.NODE_ENV === "development" ? error.message : undefined,
       },
-      { status: 500 }
+      { status: statusCode }
     );
   }
 }

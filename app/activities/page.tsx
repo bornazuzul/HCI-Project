@@ -26,10 +26,9 @@ export default async function ActivitiesPage({
   const validatedPage = Math.max(1, page);
   const categoryFilter = category?.trim() || undefined;
 
-  // Fetch ONLY approved activities and count
   const [activities, totalActivities] = await Promise.all([
     getApprovedActivitiesPaginated(validatedPage, PAGE_SIZE, categoryFilter),
-    getActivityCounts().then((counts) => counts.approved), // Only count approved
+    getActivityCounts().then((counts) => counts.approved),
   ]);
 
   const uiCategory = category === "" ? "all" : category;

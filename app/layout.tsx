@@ -3,7 +3,6 @@ import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Inter, Lato } from "next/font/google";
 import "./globals.css";
 import { Navigation } from "./_components/navigation";
-import { AuthProvider } from "./_context/AuthContext";
 import { AppProvider } from "./providers";
 import { getPages } from "@/lib/api/pages";
 
@@ -37,23 +36,20 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const pages = await getPages();
-  console.log("Pages from DB:", pages);
 
   return (
     <html lang="en">
       <body
         className={`${inter.className} ${inter.variable} ${lato.variable} antialiased bg-brand-fill-bg`}
       >
-        <AuthProvider>
-          <AppProvider>
-            <header className="fixed top-0 left-0 right-0 z-50 bg-brand-fill-bg border-b border-brand-stroke-weak">
-              <Navigation pages={pages} />
-            </header>
-            <main className="pt-16">
-              <NuqsAdapter>{children}</NuqsAdapter>
-            </main>
-          </AppProvider>
-        </AuthProvider>
+        <AppProvider>
+          <header className="fixed top-0 left-0 right-0 z-50 bg-brand-fill-bg border-b border-brand-stroke-weak">
+            <Navigation pages={pages} />
+          </header>
+          <main className="pt-16">
+            <NuqsAdapter>{children}</NuqsAdapter>
+          </main>
+        </AppProvider>
       </body>
     </html>
   );

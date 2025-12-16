@@ -7,16 +7,23 @@ import {
   useEffect,
   type ReactNode,
 } from "react";
-import { useData, type AppUser } from "@/hooks/use-data";
+import { createClient } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 
-export type UserRole = "user" | "admin" | null;
+export interface AppUser {
+  id: string;
+  email: string;
+  name: string;
+  role: "user" | "admin";
+}
 
 export interface AppContextType {
   isLoggedIn: boolean;
   user: AppUser | null;
+  isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -24,80 +31,177 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export function AppProvider({ children }: { children: ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<AppUser | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
-  const { users, addUser, initializeWithMockData } = useData();
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
+  const supabase = createClient();
 
-  // Initialize app with mock data on first load
+  // Check for existing session on mount
   useEffect(() => {
-    if (typeof window !== "undefined" && !isInitialized) {
-      const stored = localStorage.getItem("volunteerme_data");
-      if (!stored) {
-        initializeWithMockData();
+    const checkSession = async () => {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (session?.user) {
+          // Get user profile from database
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", session.user.id)
+            .single();
+
+          if (profile) {
+            setUser({
+              id: profile.id,
+              email: profile.email,
+              name: profile.name,
+              role: profile.role as "user" | "admin",
+            });
+            setIsLoggedIn(true);
+          }
+        }
+      } catch (error) {
+        console.error("Session check error:", error);
+      } finally {
+        setIsLoading(false);
       }
-      setIsInitialized(true);
-    }
-  }, [initializeWithMockData, isInitialized]);
+    };
+
+    checkSession();
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", session.user.id)
+          .single();
+
+        if (profile) {
+          setUser({
+            id: profile.id,
+            email: profile.email,
+            name: profile.name,
+            role: profile.role as "user" | "admin",
+          });
+          setIsLoggedIn(true);
+        }
+      } else {
+        setUser(null);
+        setIsLoggedIn(false);
+      }
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [supabase]);
 
   const login = async (email: string, password: string) => {
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    const foundUser = users.find(
-      (u) => u.email === email && u.password === password
-    );
+      if (error) throw error;
 
-    if (foundUser) {
-      setUser(foundUser);
-      setIsLoggedIn(true);
-      localStorage.setItem("currentUser", JSON.stringify(foundUser));
-    } else {
-      throw new Error("Invalid email or password");
+      if (data.user) {
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", data.user.id)
+          .single();
+
+        if (profileError) throw profileError;
+
+        setUser({
+          id: profile.id,
+          email: profile.email,
+          name: profile.name,
+          role: profile.role as "user" | "admin",
+        });
+        setIsLoggedIn(true);
+      }
+    } catch (error: any) {
+      throw new Error(error.message || "Login failed");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const register = async (name: string, email: string, password: string) => {
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    setIsLoading(true);
+    try {
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: name,
+          },
+        },
+      });
 
-    const emailExists = users.some((u) => u.email === email);
-    if (emailExists) {
-      throw new Error("Email already exists");
-    }
+      if (authError) throw authError;
 
-    const newUser = addUser({
-      name,
-      email,
-      password,
-      role: "user",
-    });
+      if (authData.user) {
+        const { error: profileError } = await supabase.from("profiles").insert({
+          id: authData.user.id,
+          email: email,
+          name: name,
+          role: "user",
+          created_at: new Date().toISOString(),
+        });
 
-    setUser(newUser);
-    setIsLoggedIn(true);
-    localStorage.setItem("currentUser", JSON.stringify(newUser));
-  };
+        if (profileError) throw profileError;
 
-  const logout = () => {
-    setUser(null);
-    setIsLoggedIn(false);
-    localStorage.removeItem("currentUser");
-  };
-
-  // Restore user session on mount
-  useEffect(() => {
-    if (typeof window !== "undefined" && isInitialized) {
-      const storedUser = localStorage.getItem("currentUser");
-      if (storedUser) {
-        try {
-          const parsedUser = JSON.parse(storedUser);
-          setUser(parsedUser);
-          setIsLoggedIn(true);
-        } catch (error) {
-          console.error("Failed to restore user session:", error);
-        }
+        setUser({
+          id: authData.user.id,
+          email: email,
+          name: name,
+          role: "user",
+        });
+        setIsLoggedIn(true);
       }
+    } catch (error: any) {
+      throw new Error(error.message || "Registration failed");
+    } finally {
+      setIsLoading(false);
     }
-  }, [isInitialized]);
+  };
+
+  const logout = async () => {
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+
+      setUser(null);
+      setIsLoggedIn(false);
+      router.refresh();
+    } catch (error: any) {
+      throw new Error(error.message || "Logout failed");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <AppContext.Provider value={{ isLoggedIn, user, login, register, logout }}>
+    <AppContext.Provider
+      value={{
+        isLoggedIn,
+        user,
+        isLoading,
+        login,
+        register,
+        logout,
+      }}
+    >
       {children}
     </AppContext.Provider>
   );
