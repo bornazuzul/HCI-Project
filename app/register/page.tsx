@@ -24,7 +24,9 @@ export default function RegisterPage() {
     setError("");
 
     try {
+      console.log("Attempting registration...");
       await register(name, email, password);
+      console.log("Registration successful, redirecting...");
       window.location.href = "/";
     } catch (err: any) {
       console.error("Registration failed:", err);

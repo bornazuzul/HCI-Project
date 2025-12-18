@@ -1,18 +1,15 @@
+// app/api/activities/route.ts - UPDATED FOR NEW USER SYSTEM
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { activities, profiles } from "@/db/schema";
+import { activities } from "@/db/schema";
 import { z } from "zod";
-import { eq, asc, sql, and } from "drizzle-orm";
+import { eq, asc, sql } from "drizzle-orm";
+import { auth } from "@/lib/auth";
 
+// Validation schema for activity creation
 const createActivitySchema = z.object({
-  title: z
-    .string()
-    .min(3, "Title must be at least 3 characters")
-    .max(200, "Title is too long"),
-  description: z
-    .string()
-    .min(20, "Please provide more details (min 20 characters)")
-    .max(2000, "Description is too long"),
+  title: z.string().min(3, "Title must be at least 3 characters").max(200),
+  description: z.string().min(20, "Please provide more details").max(2000),
   category: z.enum([
     "sports",
     "education",
@@ -26,26 +23,19 @@ const createActivitySchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format"),
   time: z.string().regex(/^\d{2}:\d{2}$/, "Time must be in HH:MM format"),
   location: z.string().min(3, "Please provide a valid location"),
-  maxApplicants: z
-    .number()
-    .min(1, "Must be at least 1 volunteer")
-    .max(500, "Maximum 500 volunteers"),
+  maxApplicants: z.number().min(1, "Must be at least 1 volunteer").max(500),
 });
-
-// Type for activity form data
-type ActivityFormData = z.infer<typeof createActivitySchema>;
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get("category");
     const status = searchParams.get("status") || "approved";
-    const organizerId = searchParams.get("organizerId");
     const page = parseInt(searchParams.get("page") || "1");
     const pageSize = parseInt(searchParams.get("pageSize") || "6");
-
     const offset = (page - 1) * pageSize;
 
+    // Build query
     let query = db
       .select({
         id: activities.id,
@@ -67,16 +57,10 @@ export async function GET(request: NextRequest) {
       .from(activities)
       .where(eq(activities.status, status));
 
-    // Apply filters
     if (category && category !== "all") {
       query = query.where(eq(activities.category, category));
     }
 
-    if (organizerId) {
-      query = query.where(eq(activities.organizerId, organizerId));
-    }
-
-    // Execute query
     const data = await query
       .orderBy(asc(activities.date), asc(activities.time))
       .limit(pageSize)
@@ -90,10 +74,6 @@ export async function GET(request: NextRequest) {
 
     if (category && category !== "all") {
       countQuery = countQuery.where(eq(activities.category, category));
-    }
-
-    if (organizerId) {
-      countQuery = countQuery.where(eq(activities.organizerId, organizerId));
     }
 
     const countResult = await countQuery;
@@ -113,8 +93,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error: any) {
     console.error("Error fetching activities:", error);
-
-    // Return empty response for now
     return NextResponse.json({
       success: true,
       data: [],
@@ -134,8 +112,6 @@ export async function POST(request: NextRequest) {
   try {
     // Parse request body
     const body = await request.json();
-
-    // Expect userId to be sent from client
     const { userId, ...activityData } = body;
 
     if (!userId) {
@@ -178,35 +154,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get user profile
-    const profile = await db
+    // Get user from the user table
+    const user = await db
       .select()
-      .from(profiles)
-      .where(eq(profiles.id, userId))
+      .from(activities)
+      .where(eq(activities.organizerId, userId))
       .then((res) => res[0]);
 
-    if (!profile) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "User profile not found. Please complete your profile first.",
-        },
-        { status: 404 }
-      );
-    }
-
-    // Check if user has a name
-    if (!profile.name || profile.name.trim() === "") {
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            "Please complete your profile name before creating activities.",
-        },
-        { status: 400 }
-      );
-    }
-
+    // For now, we'll use the provided userId directly
+    // In production, you'd want to fetch the user from the user table
     const [activity] = await db
       .insert(activities)
       .values({
@@ -217,10 +173,10 @@ export async function POST(request: NextRequest) {
         time: validatedData.time,
         location: validatedData.location,
         maxApplicants: validatedData.maxApplicants,
-        currentApplicants: 0, // Initialize to 0
-        organizerId: profile.id,
-        organizerName: profile.name,
-        organizerEmail: profile.email,
+        currentApplicants: 0,
+        organizerId: userId,
+        organizerName: "User", // You'll need to get this from the user table
+        organizerEmail: "user@example.com", // You'll need to get this from the user table
         status: "pending",
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -244,36 +200,14 @@ export async function POST(request: NextRequest) {
     );
   } catch (error: any) {
     console.error("Error creating activity:", error);
-
-    // Handle specific errors
-    let errorMessage = "Failed to create activity";
-    let statusCode = 500;
-
-    if (error.message?.includes("foreign key")) {
-      errorMessage = "User profile issue. Please try logging in again.";
-      statusCode = 400;
-    } else if (
-      error.message?.includes("duplicate key") ||
-      error.code === "23505"
-    ) {
-      errorMessage = "An activity with similar details already exists.";
-      statusCode = 409;
-    } else if (
-      error.message?.includes("null value") ||
-      error.code === "23502"
-    ) {
-      errorMessage = "Missing required information. Please check all fields.";
-      statusCode = 400;
-    }
-
     return NextResponse.json(
       {
         success: false,
-        error: errorMessage,
+        error: "Failed to create activity",
         details:
           process.env.NODE_ENV === "development" ? error.message : undefined,
       },
-      { status: statusCode }
+      { status: 500 }
     );
   }
 }

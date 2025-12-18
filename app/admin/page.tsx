@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Navigation from "@/components/navigation";
 import AdminTabs from "@/components/admin/admin-tabs";
 import { useApp } from "@/app/providers";
-import PendingActivitiesList from "@/components/admin/pending-activities-list";
+import PendingActivitiesList from "./pending-activities-list";
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("pending");

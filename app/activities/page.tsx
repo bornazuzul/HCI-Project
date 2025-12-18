@@ -1,10 +1,5 @@
-import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import ActivitiesPageClient from "./page.client";
-import {
-  getActivitiesPaginated,
-  getActivitiesCount,
-} from "@/lib/api/activities";
 import { loadActivitiesSearchParams } from "@/lib/activities-search-params";
 import {
   getApprovedActivitiesPaginated,

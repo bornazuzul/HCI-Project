@@ -1,59 +1,5 @@
-import {
-  pgTable,
-  serial,
-  text,
-  boolean,
-  integer,
-  timestamp,
-  date,
-  uuid,
-  index,
-} from "drizzle-orm/pg-core";
-
-// Pages table
-export const pages = pgTable("pages", {
-  id: serial("id").primaryKey(),
-  title: text("title").notNull().unique(),
-  path: text("path").notNull().unique(),
-  includeInProd: boolean("include_in_prod").notNull().default(false),
-  displayOrder: integer("display_order").notNull().default(0),
-});
-
-// Profiles table (legacy, not used by Better Auth)
-export const profiles = pgTable("profiles", {
-  id: uuid("id").primaryKey(),
-  email: text("email").notNull(),
-  name: text("name").notNull(),
-  role: text("role").notNull().default("user"),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-// Activities table
-export const activities = pgTable("activities", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  title: text("title").notNull(),
-  description: text("description").notNull(),
-  category: text("category").notNull(),
-  date: date("date").notNull(),
-  time: text("time").notNull(),
-  location: text("location").notNull(),
-  maxApplicants: integer("max_applicants").notNull(),
-  currentApplicants: integer("current_applicants").default(0),
-  organizerId: text("organizer_id"), // text to match user.id
-  organizerName: text("organizer_name"),
-  organizerEmail: text("organizer_email"),
-  status: text("status").notNull().default("pending"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-// Activity applications table
-export const activityApplications = pgTable("activity_applications", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  activityId: uuid("activity_id").references(() => activities.id),
-  userId: text("user_id"), // text to match user.id
-  createdAt: timestamp("created_at").defaultNow(),
-});
+import { relations } from "drizzle-orm";
+import { pgTable, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -127,3 +73,22 @@ export const verification = pgTable(
   },
   (table) => [index("verification_identifier_idx").on(table.identifier)]
 );
+
+export const userRelations = relations(user, ({ many }) => ({
+  sessions: many(session),
+  accounts: many(account),
+}));
+
+export const sessionRelations = relations(session, ({ one }) => ({
+  user: one(user, {
+    fields: [session.userId],
+    references: [user.id],
+  }),
+}));
+
+export const accountRelations = relations(account, ({ one }) => ({
+  user: one(user, {
+    fields: [account.userId],
+    references: [user.id],
+  }),
+}));

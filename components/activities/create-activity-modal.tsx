@@ -74,7 +74,7 @@ export default function CreateActivityModal({
     title: { isValid: false, isTouched: false, error: "" },
     description: { isValid: false, isTouched: false, error: "" },
     date: { isValid: false, isTouched: false, error: "" },
-    time: { isValid: false, isTouched: false, error: string },
+    time: { isValid: false, isTouched: false, error: "" },
     location: { isValid: false, isTouched: false, error: "" },
     maxApplicants: { isValid: true, isTouched: false, error: "" },
   });
@@ -787,7 +787,7 @@ export default function CreateActivityModal({
                 </p>
                 {!isFormValid && (
                   <p className="text-sm text-red-600 mt-2 font-medium">
-                    ⚠️ Please fix the errors above before submitting.
+                    Please input all fealds.
                   </p>
                 )}
               </div>

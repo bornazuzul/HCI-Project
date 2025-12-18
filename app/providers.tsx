@@ -1,3 +1,4 @@
+// app/providers.tsx - REVERT TO WORKING VERSION
 "use client";
 
 import {
@@ -7,8 +8,8 @@ import {
   useEffect,
   type ReactNode,
 } from "react";
-import { createClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase";
 
 export interface AppUser {
   id: string;
@@ -39,19 +40,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const checkSession = async () => {
       try {
+        console.log("🔍 Checking Supabase session...");
         const {
           data: { session },
+          error,
         } = await supabase.auth.getSession();
 
+        if (error) {
+          console.error("Session check error:", error);
+          return;
+        }
+
         if (session?.user) {
+          console.log("✅ Session found, user ID:", session.user.id);
           // Get user profile from database
-          const { data: profile } = await supabase
+          const { data: profile, error: profileError } = await supabase
             .from("profiles")
             .select("*")
             .eq("id", session.user.id)
             .single();
 
-          if (profile) {
+          if (profileError) {
+            console.error("Profile fetch error:", profileError);
+          } else if (profile) {
+            console.log("✅ Profile loaded:", profile.email);
             setUser({
               id: profile.id,
               email: profile.email,
@@ -60,6 +72,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
             });
             setIsLoggedIn(true);
           }
+        } else {
+          console.log("ℹ️ No active session found");
         }
       } catch (error) {
         console.error("Session check error:", error);
@@ -74,7 +88,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("🔄 Auth state changed:", event);
+
       if (session?.user) {
+        console.log("✅ User authenticated:", session.user.id);
+        // Get user profile
         const { data: profile } = await supabase
           .from("profiles")
           .select("*")
@@ -91,6 +109,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           setIsLoggedIn(true);
         }
       } else {
+        console.log("ℹ️ User logged out");
         setUser(null);
         setIsLoggedIn(false);
       }
@@ -103,32 +122,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
+      console.log("🔐 Attempting login for:", email);
+
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+        email: email.trim(),
+        password: password.trim(),
       });
 
-      if (error) throw error;
-
-      if (data.user) {
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", data.user.id)
-          .single();
-
-        if (profileError) throw profileError;
-
-        setUser({
-          id: profile.id,
-          email: profile.email,
-          name: profile.name,
-          role: profile.role as "user" | "admin",
-        });
-        setIsLoggedIn(true);
+      if (error) {
+        console.error("❌ Login error:", error.message);
+        throw new Error(error.message);
       }
+
+      console.log("✅ Login successful, user ID:", data.user?.id);
+
+      // Don't fetch profile here - let onAuthStateChange handle it
+      // This prevents race conditions
     } catch (error: any) {
-      throw new Error(error.message || "Login failed");
+      console.error("❌ Login failed:", error.message);
+      throw new Error(
+        error.message || "Login failed. Please check your credentials."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -137,39 +151,71 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const register = async (name: string, email: string, password: string) => {
     setIsLoading(true);
     try {
+      console.log("📝 Starting registration for:", email);
+
+      // 1. Sign up with Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
+        email: email.trim(),
+        password: password.trim(),
         options: {
           data: {
-            name: name,
+            name: name.trim(),
           },
         },
       });
 
-      if (authError) throw authError;
+      console.log("Supabase auth response:", authData, authError);
+
+      if (authError) {
+        console.error("❌ Supabase auth error:", authError.message);
+        throw new Error(authError.message);
+      }
 
       if (authData.user) {
+        console.log("✅ Auth user created, ID:", authData.user.id);
+
+        // 2. Create profile in database
         const { error: profileError } = await supabase.from("profiles").insert({
           id: authData.user.id,
-          email: email,
-          name: name,
+          email: email.trim(),
+          name: name.trim(),
           role: "user",
           created_at: new Date().toISOString(),
         });
 
-        if (profileError) throw profileError;
+        if (profileError) {
+          console.error("❌ Profile creation error:", profileError.message);
 
-        setUser({
-          id: authData.user.id,
-          email: email,
-          name: name,
-          role: "user",
+          // If profile creation fails, try to delete the auth user
+          try {
+            await supabase.auth.admin.deleteUser(authData.user.id);
+          } catch (deleteError) {
+            console.error("Failed to delete auth user:", deleteError);
+          }
+
+          throw new Error("Failed to create user profile. Please try again.");
+        }
+
+        console.log("✅ Profile created successfully");
+
+        // 3. Auto-login after registration
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password: password.trim(),
         });
-        setIsLoggedIn(true);
+
+        if (signInError) {
+          console.error("❌ Auto-login failed:", signInError.message);
+          throw signInError;
+        }
+
+        console.log("✅ Registration and auto-login completed!");
       }
     } catch (error: any) {
-      throw new Error(error.message || "Registration failed");
+      console.error("❌ Registration failed:", error.message);
+      throw new Error(
+        error.message || "Registration failed. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -179,7 +225,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     try {
       const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      if (error) throw new Error(error.message);
 
       setUser(null);
       setIsLoggedIn(false);

@@ -2,15 +2,17 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useApp } from "@/app/providers";
-import LoginForm from "@/components/auth/login-form";
-import { ArrowLeft, Shield, Users, Heart, Info } from "lucide-react";
+import { ArrowLeft, Shield, Users, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 export default function LoginPage() {
   const { login } = useApp();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -19,7 +21,9 @@ export default function LoginPage() {
     setError("");
 
     try {
+      console.log("Attempting login...");
       await login(email, password);
+      console.log("Login successful, redirecting...");
       window.location.href = "/";
     } catch (err: any) {
       console.error("Login failed:", err);
@@ -219,9 +223,55 @@ export default function LoginPage() {
                 </p>
               </div>
 
-              <LoginForm onSubmit={handleLogin} />
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleLogin(email, password);
+                }}
+                className="space-y-4"
+              >
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Email Address
+                  </label>
+                  <Input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    placeholder="you@example.com"
+                    disabled={isLoading}
+                    className="w-full"
+                  />
+                </div>
 
-              {/* Helper Links */}
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Password
+                  </label>
+                  <Input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    placeholder="••••••••"
+                    disabled={isLoading}
+                    className="w-full"
+                  />
+                </div>
+
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                      Signing in...
+                    </>
+                  ) : (
+                    "Sign in"
+                  )}
+                </Button>
+              </form>
+
               <div className="space-y-4 mt-6 pt-6 border-t">
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground">
