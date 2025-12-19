@@ -1,3 +1,5 @@
+"use client";
+
 import type React from "react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -7,9 +9,13 @@ import { cn } from "@/lib/utils";
 
 interface RegisterFormProps {
   onSubmit: (name: string, email: string, password: string) => Promise<void>;
+  isLoading?: boolean;
 }
 
-export default function RegisterForm({ onSubmit }: RegisterFormProps) {
+export default function RegisterForm({
+  onSubmit,
+  isLoading = false,
+}: RegisterFormProps) {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -26,7 +32,6 @@ export default function RegisterForm({ onSubmit }: RegisterFormProps) {
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [formError, setFormError] = useState("");
 
   // Validation functions
@@ -117,7 +122,6 @@ export default function RegisterForm({ onSubmit }: RegisterFormProps) {
     }
   };
 
-  // Validate on blur
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
@@ -166,7 +170,6 @@ export default function RegisterForm({ onSubmit }: RegisterFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setFormError("");
 
     // Validate all fields
@@ -203,7 +206,6 @@ export default function RegisterForm({ onSubmit }: RegisterFormProps) {
 
     if (nameError || emailError || passwordError || confirmPasswordError) {
       setFormError("Please fix the errors above");
-      setIsLoading(false);
       return;
     }
 
@@ -211,8 +213,6 @@ export default function RegisterForm({ onSubmit }: RegisterFormProps) {
       await onSubmit(formData.name, formData.email, formData.password);
     } catch (err: any) {
       setFormError(err.message || "Registration failed. Please try again.");
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -229,6 +229,16 @@ export default function RegisterForm({ onSubmit }: RegisterFormProps) {
 
     return "border-red-500 focus:border-red-600";
   };
+
+  // Calculate if button should be disabled
+  const isButtonDisabled =
+    isLoading ||
+    (!validation.email.isValid && validation.email.isTouched) ||
+    (!validation.password.isValid && validation.password.isTouched) ||
+    !validation.email.isTouched ||
+    !validation.password.isTouched ||
+    !validation.password.isValid ||
+    !validation.confirmPassword.isValid;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -359,6 +369,7 @@ export default function RegisterForm({ onSubmit }: RegisterFormProps) {
             onClick={() => setShowPassword(!showPassword)}
             className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
             aria-label={showPassword ? "Hide password" : "Show password"}
+            disabled={isLoading}
           >
             {showPassword ? (
               <EyeOff className="w-5 h-5" />
@@ -422,6 +433,7 @@ export default function RegisterForm({ onSubmit }: RegisterFormProps) {
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
             className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
             aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+            disabled={isLoading}
           >
             {showConfirmPassword ? (
               <EyeOff className="w-5 h-5" />
@@ -506,15 +518,7 @@ export default function RegisterForm({ onSubmit }: RegisterFormProps) {
       <Button
         type="submit"
         className="w-full h-12 text-base font-semibold"
-        disabled={
-          isLoading ||
-          (!validation.email.isValid && validation.email.isTouched) ||
-          (!validation.password.isValid && validation.password.isTouched) ||
-          !validation.email.isTouched ||
-          !validation.password.isTouched ||
-          !validation.password.isValid ||
-          !validation.confirmPassword.isValid
-        }
+        disabled={isButtonDisabled}
       >
         {isLoading ? (
           <>

@@ -25,9 +25,20 @@ export default function RegisterPage() {
 
     try {
       console.log("Attempting registration...");
-      await register(name, email, password);
-      console.log("Registration successful, redirecting...");
-      window.location.href = "/";
+      const result = await register(name, email, password);
+
+      if (result.success) {
+        console.log(
+          "Registration successful, waiting for auth state update..."
+        );
+
+        setTimeout(() => {
+          console.log("Redirecting to home page...");
+          window.location.href = "/";
+        }, 500);
+      } else {
+        setError(result.error || "Registration failed. Please try again.");
+      }
     } catch (err: any) {
       console.error("Registration failed:", err);
       setError(err.message || "Registration failed. Please try again.");
@@ -139,7 +150,7 @@ export default function RegisterPage() {
           {/* Right Column - Register Form */}
           <div className="space-y-8">
             <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-gray-100">
-              <RegisterForm onSubmit={handleRegister} />
+              <RegisterForm onSubmit={handleRegister} isLoading={isLoading} />
 
               {/* Helper Links */}
               <div className="space-y-4 mt-6 pt-6 border-t">
