@@ -1,6 +1,6 @@
-import type React from "react";
+"use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, FormEvent } from "react";
 import {
   X,
   AlertCircle,
@@ -22,7 +22,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useData } from "@/hooks/use-data";
 import { useApp } from "@/app/providers";
 import { cn } from "@/lib/utils";
 
@@ -41,13 +40,23 @@ interface FormValidation {
   maxApplicants: { isValid: boolean; isTouched: boolean; error: string };
 }
 
+// Activity form data interface
+interface ActivityFormData {
+  title: string;
+  description: string;
+  category: string;
+  date: string;
+  time: string;
+  location: string;
+  maxApplicants: number;
+}
+
 export default function CreateActivityModal({
   isOpen,
   onClose,
   onActivityCreated,
 }: CreateActivityModalProps) {
-  const { addActivity } = useData();
-  const { user } = useApp();
+  const { user, isLoggedIn } = useApp();
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -60,6 +69,7 @@ export default function CreateActivityModal({
 
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
   const [validation, setValidation] = useState<FormValidation>({
     title: { isValid: false, isTouched: false, error: "" },
     description: { isValid: false, isTouched: false, error: "" },
@@ -83,18 +93,6 @@ export default function CreateActivityModal({
     );
   }, [validation]);
 
-  // Calculate if all fields have been touched
-  const areAllFieldsTouched = useMemo(() => {
-    return (
-      validation.title.isTouched &&
-      validation.description.isTouched &&
-      validation.date.isTouched &&
-      validation.time.isTouched &&
-      validation.location.isTouched &&
-      validation.maxApplicants.isTouched
-    );
-  }, [validation]);
-
   // Calculate form completion percentage
   const formCompletion = useMemo(() => {
     const fields = [
@@ -109,6 +107,105 @@ export default function CreateActivityModal({
     return Math.round((validCount / fields.length) * 100);
   }, [validation]);
 
+  // Handle form submission
+  const handleFormSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+
+    if (!isFormValid) {
+      validateForm();
+      return;
+    }
+
+    setIsSubmitting(true);
+    setServerError(null);
+
+    try {
+      if (!isLoggedIn || !user) {
+        throw new Error("Not authenticated. Please log in.");
+      }
+
+      if (!user.name || user.name.trim() === "") {
+        throw new Error(
+          "Please complete your profile name before creating activities."
+        );
+      }
+
+      const activityData: ActivityFormData = {
+        title: formData.title,
+        description: formData.description,
+        category: formData.category,
+        date: formData.date,
+        time: formData.time,
+        location: formData.location,
+        maxApplicants: parseInt(formData.maxApplicants),
+      };
+
+      const response = await fetch("/api/activities", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...activityData,
+          userId: user.id,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to create activity");
+      }
+
+      setSubmitted(true);
+
+      if (onActivityCreated) {
+        onActivityCreated();
+      }
+
+      setTimeout(() => {
+        setFormData({
+          title: "",
+          description: "",
+          category: "community",
+          date: "",
+          time: "",
+          location: "",
+          maxApplicants: "30",
+        });
+        setValidation({
+          title: { isValid: false, isTouched: false, error: "" },
+          description: { isValid: false, isTouched: false, error: "" },
+          date: { isValid: false, isTouched: false, error: "" },
+          time: { isValid: false, isTouched: false, error: "" },
+          location: { isValid: false, isTouched: false, error: "" },
+          maxApplicants: { isValid: true, isTouched: false, error: "" },
+        });
+        setIsSubmitting(false);
+      }, 3000);
+    } catch (error: any) {
+      console.error("Error submitting activity:", error);
+      setServerError(
+        error.message || "Failed to create activity. Please try again."
+      );
+      setIsSubmitting(false);
+    }
+  };
+
+  const getInputStatus = (field: keyof FormValidation) => {
+    const fieldValidation = validation[field];
+
+    if (!fieldValidation.isTouched) {
+      return "border-border focus:border-primary focus:ring-1 focus:ring-primary";
+    }
+
+    if (fieldValidation.isValid) {
+      return "border-green-500 focus:border-green-600 focus:ring-1 focus:ring-green-500";
+    }
+
+    return "border-red-500 focus:border-red-600 focus:ring-1 focus:ring-red-500";
+  };
+
   // Close on Escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -120,7 +217,6 @@ export default function CreateActivityModal({
     return () => window.removeEventListener("keydown", handleEscape);
   }, [isOpen, onClose]);
 
-  // Auto-focus first input
   useEffect(() => {
     if (isOpen && !submitted && modalRef.current) {
       const firstInput = modalRef.current.querySelector(
@@ -132,21 +228,20 @@ export default function CreateActivityModal({
     }
   }, [isOpen, submitted]);
 
-  // Validation functions
   const validateField = (name: string, value: string): string => {
     switch (name) {
       case "title":
         if (!value.trim()) return "Activity title is required";
         if (value.length < 3) return "Title must be at least 3 characters";
-        if (value.length > 100) return "Title is too long (max 100 characters)";
+        if (value.length > 200) return "Title is too long (max 200 characters)";
         return "";
 
       case "description":
         if (!value.trim()) return "Description is required";
         if (value.length < 20)
           return "Please provide more details (min 20 characters)";
-        if (value.length > 500)
-          return "Description is too long (max 500 characters)";
+        if (value.length > 2000)
+          return "Description is too long (max 2000 characters)";
         return "";
 
       case "date":
@@ -159,6 +254,9 @@ export default function CreateActivityModal({
 
       case "time":
         if (!value) return "Time is required";
+        const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+        if (!timeRegex.test(value))
+          return "Time must be in HH:MM format (24-hour)";
         return "";
 
       case "location":
@@ -183,7 +281,6 @@ export default function CreateActivityModal({
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
 
-    // Real-time validation
     const error = validateField(name, value);
     setValidation((prev) => ({
       ...prev,
@@ -237,68 +334,6 @@ export default function CreateActivityModal({
     return isValid;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    // Final validation check
-    if (!validateForm() || !user || !isFormValid) {
-      setIsSubmitting(false);
-      return;
-    }
-
-    try {
-      addActivity({
-        title: formData.title,
-        description: formData.description,
-        category: formData.category,
-        date: formData.date,
-        time: formData.time,
-        location: formData.location,
-        maxApplicants: Number.parseInt(formData.maxApplicants),
-        status: "pending",
-        organizerId: user.id,
-        organizerName: user.name,
-        organizerEmail: user.email,
-        image: "/placeholder.jpg",
-      });
-
-      setSubmitted(true);
-
-      setTimeout(() => {
-        setFormData({
-          title: "",
-          description: "",
-          category: "community",
-          date: "",
-          time: "",
-          location: "",
-          maxApplicants: "30",
-        });
-        setSubmitted(false);
-        setIsSubmitting(false);
-        onActivityCreated?.();
-        onClose();
-      }, 2000);
-    } catch (error) {
-      setIsSubmitting(false);
-    }
-  };
-
-  const getInputStatus = (field: keyof FormValidation) => {
-    const fieldValidation = validation[field];
-
-    if (!fieldValidation.isTouched) {
-      return "border-border focus:border-primary focus:ring-1 focus:ring-primary";
-    }
-
-    if (fieldValidation.isValid) {
-      return "border-green-500 focus:border-green-600 focus:ring-1 focus:ring-green-500";
-    }
-
-    return "border-red-500 focus:border-red-600 focus:ring-1 focus:ring-red-500";
-  };
-
   const getIcon = (field: string) => {
     switch (field) {
       case "title":
@@ -327,7 +362,7 @@ export default function CreateActivityModal({
         className="bg-background rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-4 duration-300"
       >
         {/* Header */}
-        <div className=" p-6 border-b border-border sticky top-0 bg-background z-10">
+        <div className="p-6 border-b border-border sticky top-0 bg-background z-10">
           <div className="flex justify-between items-center">
             <div>
               <h2 className="text-2xl font-bold text-foreground">
@@ -347,9 +382,18 @@ export default function CreateActivityModal({
             </button>
           </div>
 
+          {serverError && (
+            <div className="mt-4">
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{serverError}</AlertDescription>
+              </Alert>
+            </div>
+          )}
+
           {/* Form Progress Indicator */}
           {!submitted && (
-            <div className="px-6 pt-4">
+            <div className="mt-4">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs font-medium text-foreground">
                   Form completion: {formCompletion}%
@@ -404,7 +448,7 @@ export default function CreateActivityModal({
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="p-6 space-y-6">
+            <form onSubmit={handleFormSubmit} className="p-6 space-y-6">
               {/* Basic Information */}
               <div className="space-y-4">
                 <h3 className="font-semibold text-foreground flex items-center gap-2">
@@ -427,13 +471,6 @@ export default function CreateActivityModal({
                         onBlur={handleBlur}
                         placeholder="e.g., Beach Cleanup"
                         className={cn("h-11 pl-10", getInputStatus("title"))}
-                        aria-describedby={
-                          validation.title.error ? "title-error" : undefined
-                        }
-                        aria-invalid={
-                          validation.title.isTouched &&
-                          !validation.title.isValid
-                        }
                       />
                       <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
                         {getIcon("title")}
@@ -451,7 +488,7 @@ export default function CreateActivityModal({
                         )}
                     </div>
                     {validation.title.isTouched && validation.title.error && (
-                      <p id="title-error" className="text-red-500 text-xs">
+                      <p className="text-red-500 text-xs">
                         {validation.title.error}
                       </p>
                     )}
@@ -485,10 +522,9 @@ export default function CreateActivityModal({
                           <SelectItem value="education">
                             📚 Education
                           </SelectItem>
-                          <SelectItem value="health">
-                            🏥 Health & Medical
-                          </SelectItem>
-                          <SelectItem value="animals">🐾 Animals</SelectItem>
+                          <SelectItem value="sports">⚽ Sports</SelectItem>
+                          <SelectItem value="health">🏥 Health</SelectItem>
+                          <SelectItem value="other">📋 Other</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -517,12 +553,6 @@ export default function CreateActivityModal({
                         onChange={handleChange}
                         onBlur={handleBlur}
                         className={cn("h-11 pl-10", getInputStatus("date"))}
-                        aria-describedby={
-                          validation.date.error ? "date-error" : undefined
-                        }
-                        aria-invalid={
-                          validation.date.isTouched && !validation.date.isValid
-                        }
                       />
                       <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
                         {getIcon("date")}
@@ -539,7 +569,7 @@ export default function CreateActivityModal({
                       )}
                     </div>
                     {validation.date.isTouched && validation.date.error && (
-                      <p id="date-error" className="text-red-500 text-xs">
+                      <p className="text-red-500 text-xs">
                         {validation.date.error}
                       </p>
                     )}
@@ -558,12 +588,6 @@ export default function CreateActivityModal({
                         onChange={handleChange}
                         onBlur={handleBlur}
                         className={cn("h-11 pl-10", getInputStatus("time"))}
-                        aria-describedby={
-                          validation.time.error ? "time-error" : undefined
-                        }
-                        aria-invalid={
-                          validation.time.isTouched && !validation.time.isValid
-                        }
                       />
                       <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
                         {getIcon("time")}
@@ -580,7 +604,7 @@ export default function CreateActivityModal({
                       )}
                     </div>
                     {validation.time.isTouched && validation.time.error && (
-                      <p id="time-error" className="text-red-500 text-xs">
+                      <p className="text-red-500 text-xs">
                         {validation.time.error}
                       </p>
                     )}
@@ -604,15 +628,6 @@ export default function CreateActivityModal({
                           "h-11 pl-10",
                           getInputStatus("maxApplicants")
                         )}
-                        aria-describedby={
-                          validation.maxApplicants.error
-                            ? "maxApplicants-error"
-                            : undefined
-                        }
-                        aria-invalid={
-                          validation.maxApplicants.isTouched &&
-                          !validation.maxApplicants.isValid
-                        }
                       />
                       <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
                         {getIcon("maxApplicants")}
@@ -632,10 +647,7 @@ export default function CreateActivityModal({
                     </div>
                     {validation.maxApplicants.isTouched &&
                       validation.maxApplicants.error && (
-                        <p
-                          id="maxApplicants-error"
-                          className="text-red-500 text-xs"
-                        >
+                        <p className="text-red-500 text-xs">
                           {validation.maxApplicants.error}
                         </p>
                       )}
@@ -656,13 +668,6 @@ export default function CreateActivityModal({
                       onBlur={handleBlur}
                       placeholder="e.g., Santa Monica Beach, CA"
                       className={cn("h-11 pl-10", getInputStatus("location"))}
-                      aria-describedby={
-                        validation.location.error ? "location-error" : undefined
-                      }
-                      aria-invalid={
-                        validation.location.isTouched &&
-                        !validation.location.isValid
-                      }
                     />
                     <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
                       {getIcon("location")}
@@ -682,7 +687,7 @@ export default function CreateActivityModal({
                   </div>
                   {validation.location.isTouched &&
                     validation.location.error && (
-                      <p id="location-error" className="text-red-500 text-xs">
+                      <p className="text-red-500 text-xs">
                         {validation.location.error}
                       </p>
                     )}
@@ -704,12 +709,12 @@ export default function CreateActivityModal({
                     <span
                       className={cn(
                         "text-xs",
-                        formData.description.length > 500
+                        formData.description.length > 2000
                           ? "text-red-500"
                           : "text-muted-foreground"
                       )}
                     >
-                      {formData.description.length}/500 characters
+                      {formData.description.length}/2000 characters
                     </span>
                   </div>
 
@@ -726,15 +731,6 @@ export default function CreateActivityModal({
                         "focus:outline-none focus:ring-1 resize-none",
                         getInputStatus("description")
                       )}
-                      aria-describedby={
-                        validation.description.error
-                          ? "description-error"
-                          : undefined
-                      }
-                      aria-invalid={
-                        validation.description.isTouched &&
-                        !validation.description.isValid
-                      }
                     />
                     {validation.description.isTouched &&
                       validation.description.error && (
@@ -752,10 +748,7 @@ export default function CreateActivityModal({
 
                   {validation.description.isTouched &&
                     validation.description.error && (
-                      <p
-                        id="description-error"
-                        className="text-red-500 text-xs"
-                      >
+                      <p className="text-red-500 text-xs">
                         {validation.description.error}
                       </p>
                     )}
@@ -786,16 +779,15 @@ export default function CreateActivityModal({
                 </div>
               </div>
 
-              {/* Required Fields Note */}
               <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
                 <p className="text-sm text-blue-700">
                   <span className="font-semibold">Note:</span> Fields marked
                   with * are required. Please ensure all information is accurate
                   before submitting.
                 </p>
-                {areAllFieldsTouched && !isFormValid && (
+                {!isFormValid && (
                   <p className="text-sm text-red-600 mt-2 font-medium">
-                    ⚠️ Please fix the errors above before submitting.
+                    Please input all fealds.
                   </p>
                 )}
               </div>
@@ -814,9 +806,9 @@ export default function CreateActivityModal({
                   type="submit"
                   disabled={isSubmitting || !isFormValid}
                   className={cn(
-                    "px-6 min-w-[140px] transition-all duration-200",
-                    !isFormValid &&
-                      "opacity-50 cursor-not-allowed hover:opacity-50"
+                    "px-6 min-w-[140px]",
+                    (!isFormValid || isSubmitting) &&
+                      "opacity-50 cursor-not-allowed"
                   )}
                 >
                   {isSubmitting ? (
@@ -824,10 +816,8 @@ export default function CreateActivityModal({
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                       Submitting...
                     </>
-                  ) : isFormValid ? (
-                    "Submit for Review"
                   ) : (
-                    "Complete All Fields for Submit"
+                    "Submit for Review"
                   )}
                 </Button>
               </div>

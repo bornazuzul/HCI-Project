@@ -70,8 +70,8 @@ export default function ActivityFilters({
 
       <div className="pt-4 border-t border-gray-200">
         <p className="text-xs text-gray-500">
-          <strong>Tip:</strong> Category filters update the URL and trigger
-          server reload
+          <strong>Tip: </strong>
+          Select category filter to see desired activities
         </p>
       </div>
     </div>

@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { activities } from "@/db/schema";
-import { asc, eq, count } from "drizzle-orm";
+import { asc, eq, sql, count, and } from "drizzle-orm";
 
 export async function getActivitiesPaginated(
   page: number,
@@ -20,10 +20,14 @@ export async function getActivitiesPaginated(
       time: activities.time,
       location: activities.location,
       maxApplicants: activities.maxApplicants,
+      organizerId: activities.organizerId,
+      status: activities.status,
     })
     .from(activities);
 
-  // Apply category filter if provided
+  // Only show approved activities to regular users
+  query = query.where(eq(activities.status, "approved"));
+
   if (category && category.trim() !== "") {
     query = query.where(eq(activities.category, category));
   }
@@ -37,48 +41,43 @@ export async function getActivitiesPaginated(
 }
 
 export async function getActivitiesCount(category?: string) {
-  try {
-    // Simple count approach that works with Drizzle
-    let whereCondition = undefined;
+  let whereCondition = eq(activities.status, "approved");
 
-    if (category && category.trim() !== "") {
-      whereCondition = eq(activities.category, category);
-    }
-
-    const result = await db
-      .select({
-        count: count(),
-      })
-      .from(activities)
-      .where(whereCondition);
-
-    return Number(result[0]?.count) || 0;
-  } catch (error) {
-    console.error("Error counting activities:", error);
-    return 0;
+  if (category && category.trim() !== "") {
+    whereCondition = and(
+      eq(activities.status, "approved"),
+      eq(activities.category, category)
+    );
   }
-}
 
-// Keep your existing functions
-export async function getActivities() {
-  const data = await db
+  const result = await db
     .select({
-      id: activities.id,
-      title: activities.title,
-      description: activities.description,
-      category: activities.category,
-      date: activities.date,
-      time: activities.time,
-      location: activities.location,
-      maxApplicants: activities.maxApplicants,
+      count: count(),
     })
     .from(activities)
-    .orderBy(asc(activities.date));
+    .where(whereCondition);
 
-  return data;
+  return Number(result[0]?.count) || 0;
 }
 
+// Keep this for getting activity by ID (now includes status check)
 export async function getActivityById(id: string) {
+  const data = await db
+    .select()
+    .from(activities)
+    .where(
+      and(
+        eq(activities.id, id),
+        eq(activities.status, "approved") // Only get approved activities
+      )
+    )
+    .limit(1);
+
+  return data[0] ?? null;
+}
+
+// New function to get activity by ID for admin (includes all statuses)
+export async function getActivityByIdAdmin(id: string) {
   const data = await db
     .select()
     .from(activities)

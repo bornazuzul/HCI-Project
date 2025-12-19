@@ -1,36 +1,45 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import Link from "next/link";
 import { useApp } from "@/app/providers";
 import RegisterForm from "@/components/auth/register-form";
 import { ArrowLeft, Shield, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 export default function RegisterPage() {
-  const router = useRouter();
   const { register } = useApp();
+  const [error, setError] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleRegister = async (
     name: string,
     email: string,
     password: string
   ) => {
+    setIsLoading(true);
+    setError("");
+
     try {
+      console.log("Attempting registration...");
       await register(name, email, password);
-      router.push("/");
-    } catch (error) {
-      console.error("Registration failed:", error);
+      console.log("Registration successful, redirecting...");
+      window.location.href = "/";
+    } catch (err: any) {
+      console.error("Registration failed:", err);
+      setError(err.message || "Registration failed. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleBack = () => {
-    // Navigate back using window.history
     if (window.history.length > 1) {
       window.history.back();
     } else {
-      // Fallback to home if no history
       window.location.href = "/";
     }
   };
@@ -49,6 +58,17 @@ export default function RegisterPage() {
             Return to Safety
           </Button>
         </div>
+
+        {/* Error Alert */}
+        {error && (
+          <div className="mb-6">
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          </div>
+        )}
+
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-foreground mb-3">
             Join VolunMe
@@ -60,7 +80,7 @@ export default function RegisterPage() {
 
         <div className="grid md:grid-cols-2 gap-8 items-start">
           {/* Left Column - Information */}
-          <div className="space-y-22">
+          <div className="space-y-8">
             <div className="text-left">
               <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-4">
                 <Shield className="w-5 h-5" />
@@ -116,7 +136,7 @@ export default function RegisterPage() {
             </Card>
           </div>
 
-          {/* Right Column - Login Form */}
+          {/* Right Column - Register Form */}
           <div className="space-y-8">
             <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-gray-100">
               <RegisterForm onSubmit={handleRegister} />
@@ -125,12 +145,12 @@ export default function RegisterPage() {
               <div className="space-y-4 mt-6 pt-6 border-t">
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground">
-                    New to our community?{" "}
+                    Already have an account?{" "}
                     <Link
-                      href="/register"
+                      href="/login"
                       className="text-primary font-semibold hover:underline inline-flex items-center gap-1"
                     >
-                      Create your account
+                      Sign in here
                       <ArrowLeft className="w-3 h-3 rotate-180" />
                     </Link>
                   </p>

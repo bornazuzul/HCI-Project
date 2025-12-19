@@ -1,30 +1,42 @@
 "use client";
+import { useState } from "react";
 import Link from "next/link";
 import { useApp } from "@/app/providers";
-import LoginForm from "@/components/auth/login-form";
-import { ArrowLeft, Shield, Users, Heart, Info } from "lucide-react";
+import { ArrowLeft, Shield, Users, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 export default function LoginPage() {
   const { login } = useApp();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async (email: string, password: string) => {
+    setIsLoading(true);
+    setError("");
+
     try {
-      await login(email, password, "user");
-      // Use window.location instead of router
+      console.log("Attempting login...");
+      await login(email, password);
+      console.log("Login successful, redirecting...");
       window.location.href = "/";
-    } catch (error) {
-      console.error("Login failed:", error);
+    } catch (err: any) {
+      console.error("Login failed:", err);
+      setError(err.message || "Login failed. Please check your credentials.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleBack = () => {
-    // Navigate back using window.history
     if (window.history.length > 1) {
       window.history.back();
     } else {
-      // Fallback to home if no history
       window.location.href = "/";
     }
   };
@@ -44,6 +56,16 @@ export default function LoginPage() {
             Return to Safety
           </Button>
         </div>
+
+        {/* Error Alert */}
+        {error && (
+          <div className="mb-6">
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          </div>
+        )}
 
         <div className="grid md:grid-cols-2 gap-8 items-start">
           {/* Left Column - Information */}
@@ -201,9 +223,55 @@ export default function LoginPage() {
                 </p>
               </div>
 
-              <LoginForm onSubmit={handleLogin} />
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleLogin(email, password);
+                }}
+                className="space-y-4"
+              >
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Email Address
+                  </label>
+                  <Input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    placeholder="you@example.com"
+                    disabled={isLoading}
+                    className="w-full"
+                  />
+                </div>
 
-              {/* Helper Links */}
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Password
+                  </label>
+                  <Input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    placeholder="••••••••"
+                    disabled={isLoading}
+                    className="w-full"
+                  />
+                </div>
+
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                      Signing in...
+                    </>
+                  ) : (
+                    "Sign in"
+                  )}
+                </Button>
+              </form>
+
               <div className="space-y-4 mt-6 pt-6 border-t">
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground">
