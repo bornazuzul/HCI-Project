@@ -1,5 +1,8 @@
 "use client";
+import { Suspense } from "react";
 import Navigation from "@/components/navigation";
+import NotificationsList from "@/components/notifications/notifications-list";
+import SendNotificationButton from "@/components/notifications/send-notification-button";
 import { useApp } from "@/app/providers";
 
 export default function NotificationsPage() {
@@ -9,10 +12,10 @@ export default function NotificationsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navigation isLoggedIn={isLoggedIn} userRole={userRole} />
+      {/* <Navigation isLoggedIn={isLoggedIn} userRole={userRole} /> */}
 
       <main className="pt-20 pb-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
             <div>
@@ -23,7 +26,14 @@ export default function NotificationsPage() {
                 Stay updated with activity announcements and updates
               </p>
             </div>
+
+            {isLoggedIn && <SendNotificationButton />}
           </div>
+
+          <Suspense fallback={<div>Loading...</div>}>
+            {/* Notifications List */}
+            <NotificationsList isLoggedIn={isLoggedIn} userRole={userRole} />
+          </Suspense>
         </div>
       </main>
     </div>
