@@ -15,15 +15,12 @@
 
 ### Semester Project
 
-<!-- - Link to your production version: [**Production Version**](URL_TO_PRODUCTION_VERSION) <!-- Replace with actual URL -->
-<!-- - Link to your final report: [**Final Report**](URL_TO_FINAL_REPORT) <!-- Replace with actual URL -->
-<!-- Add more as necessary -->
-
 ### Semester Assignments
 
 - Link to Assignment 1: [**Assignment 1**](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/1_assigment.md)
 - Link to Assignment 2: [**Assignment 2**](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/2_assignment/2_assignment.md)
 - Link to Assignment 3: [**Assignment 3**](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/3_assignment)
 - Link to Assignment 4: [**Assignment 4**](https://www.figma.com/design/Qot47ee38Ki6eJymclxHXn/VolunMe-Full-design?node-id=0-1&p=f&t=odmWsxBxiPrM3Y1b-0)
+- Link to Assignment 5: [**Assignment 5**](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/5_assigment.md)
 
 Live at: https://hci-project-pm3otknrd-cikoj77553-7803s-projects.vercel.app/
