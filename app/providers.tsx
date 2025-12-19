@@ -1,4 +1,3 @@
-// app/providers.tsx - REVERT TO WORKING VERSION
 "use client";
 
 import {
@@ -22,9 +21,17 @@ export interface AppContextType {
   isLoggedIn: boolean;
   user: AppUser | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  login: (
+    email: string,
+    password: string
+  ) => Promise<{ success: boolean; error?: string }>;
+  register: (
+    name: string,
+    email: string,
+    password: string
+  ) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
+  refreshAuth: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -36,62 +43,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const supabase = createClient();
 
-  // Check for existing session on mount
-  useEffect(() => {
-    const checkSession = async () => {
-      try {
-        console.log("🔍 Checking Supabase session...");
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession();
-
-        if (error) {
-          console.error("Session check error:", error);
-          return;
-        }
-
-        if (session?.user) {
-          console.log("✅ Session found, user ID:", session.user.id);
-          // Get user profile from database
-          const { data: profile, error: profileError } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", session.user.id)
-            .single();
-
-          if (profileError) {
-            console.error("Profile fetch error:", profileError);
-          } else if (profile) {
-            console.log("✅ Profile loaded:", profile.email);
-            setUser({
-              id: profile.id,
-              email: profile.email,
-              name: profile.name,
-              role: profile.role as "user" | "admin",
-            });
-            setIsLoggedIn(true);
-          }
-        } else {
-          console.log("ℹ️ No active session found");
-        }
-      } catch (error) {
-        console.error("Session check error:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkSession();
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("🔄 Auth state changed:", event);
+  // Function to refresh auth state
+  const refreshAuth = async () => {
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
       if (session?.user) {
-        console.log("✅ User authenticated:", session.user.id);
         // Get user profile
         const { data: profile } = await supabase
           .from("profiles")
@@ -109,15 +68,75 @@ export function AppProvider({ children }: { children: ReactNode }) {
           setIsLoggedIn(true);
         }
       } else {
-        console.log("ℹ️ User logged out");
         setUser(null);
         setIsLoggedIn(false);
       }
+    } catch (error) {
+      console.error("Error refreshing auth:", error);
+      setUser(null);
+      setIsLoggedIn(false);
+    } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Check for existing session on mount
+  useEffect(() => {
+    console.log("🔍 AppProvider mounting, checking session...");
+    refreshAuth();
+  }, []);
+
+  // Listen for auth changes
+  useEffect(() => {
+    console.log("🔍 Setting up auth state listener...");
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("🔄 Auth state changed:", event, "Has session:", !!session);
+
+      if (event === "SIGNED_IN" && session?.user) {
+        console.log("✅ User signed in:", session.user.email);
+
+        // Get user profile
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", session.user.id)
+          .single();
+
+        if (profile) {
+          console.log("✅ Profile loaded:", profile.email);
+          setUser({
+            id: profile.id,
+            email: profile.email,
+            name: profile.name,
+            role: profile.role as "user" | "admin",
+          });
+          setIsLoggedIn(true);
+
+          // Force a small delay before redirect to ensure state is updated
+          setTimeout(() => {
+            console.log("🔄 Redirecting after sign in...");
+            router.push("/");
+            router.refresh();
+          }, 300);
+        }
+      } else if (event === "SIGNED_OUT") {
+        console.log("ℹ️ User signed out");
+        setUser(null);
+        setIsLoggedIn(false);
+        router.push("/login");
+        router.refresh();
+      } else if (event === "TOKEN_REFRESHED") {
+        console.log("ℹ️ Token refreshed");
+        // Refresh auth state
+        await refreshAuth();
+      }
     });
 
     return () => subscription.unsubscribe();
-  }, [supabase]);
+  }, [router, supabase.auth]);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
@@ -131,18 +150,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error("❌ Login error:", error.message);
-        throw new Error(error.message);
+        return { success: false, error: error.message };
       }
 
       console.log("✅ Login successful, user ID:", data.user?.id);
 
-      // Don't fetch profile here - let onAuthStateChange handle it
-      // This prevents race conditions
+      // Return success - the onAuthStateChange listener will handle the rest
+      return { success: true };
     } catch (error: any) {
       console.error("❌ Login failed:", error.message);
-      throw new Error(
-        error.message || "Login failed. Please check your credentials."
-      );
+      return {
+        success: false,
+        error: error.message || "Login failed. Please check your credentials.",
+      };
     } finally {
       setIsLoading(false);
     }
@@ -164,11 +184,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         },
       });
 
-      console.log("Supabase auth response:", authData, authError);
-
       if (authError) {
         console.error("❌ Supabase auth error:", authError.message);
-        throw new Error(authError.message);
+        return { success: false, error: authError.message };
       }
 
       if (authData.user) {
@@ -193,7 +211,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
             console.error("Failed to delete auth user:", deleteError);
           }
 
-          throw new Error("Failed to create user profile. Please try again.");
+          return {
+            success: false,
+            error: "Failed to create user profile. Please try again.",
+          };
         }
 
         console.log("✅ Profile created successfully");
@@ -206,16 +227,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
         if (signInError) {
           console.error("❌ Auto-login failed:", signInError.message);
-          throw signInError;
+          return {
+            success: false,
+            error:
+              "Registration successful but auto-login failed. Please log in manually.",
+          };
         }
 
         console.log("✅ Registration and auto-login completed!");
+        return { success: true };
       }
+
+      return { success: false, error: "Registration failed" };
     } catch (error: any) {
       console.error("❌ Registration failed:", error.message);
-      throw new Error(
-        error.message || "Registration failed. Please try again."
-      );
+      return {
+        success: false,
+        error: error.message || "Registration failed. Please try again.",
+      };
     } finally {
       setIsLoading(false);
     }
@@ -229,6 +258,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       setUser(null);
       setIsLoggedIn(false);
+      router.push("/login");
       router.refresh();
     } catch (error: any) {
       throw new Error(error.message || "Logout failed");
@@ -246,6 +276,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         login,
         register,
         logout,
+        refreshAuth,
       }}
     >
       {children}

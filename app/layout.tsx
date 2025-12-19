@@ -4,7 +4,8 @@ import { Inter, Lato } from "next/font/google";
 import "./globals.css";
 import { Navigation } from "./_components/navigation";
 import { AppProvider } from "./providers";
-import { getPages } from "@/lib/api/pages";
+// import { getPages } from "@/lib/api/pages";
+import AuthDebugger from "@/components/debug/auth-debugger";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -44,6 +45,7 @@ export default async function RootLayout({
       >
         <AppProvider>
           <header className="fixed top-0 left-0 right-0 z-50 bg-brand-fill-bg border-b border-brand-stroke-weak">
+            <AuthDebugger />
             {/* <Navigation pages={pages} /> */}
             <Navigation />
           </header>

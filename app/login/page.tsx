@@ -16,15 +16,28 @@ export default function LoginPage() {
   const [error, setError] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = async (email: string, password: string) => {
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsLoading(true);
     setError("");
 
     try {
       console.log("Attempting login...");
-      await login(email, password);
-      console.log("Login successful, redirecting...");
-      window.location.href = "/";
+      const result = await login(email, password);
+
+      if (result.success) {
+        console.log("Login successful, waiting for auth state update...");
+
+        // Wait a bit for the auth state to update
+        setTimeout(() => {
+          console.log("Redirecting to home page...");
+          window.location.href = "/"; // Use window.location for guaranteed redirect
+        }, 500);
+      } else {
+        setError(
+          result.error || "Login failed. Please check your credentials."
+        );
+      }
     } catch (err: any) {
       console.error("Login failed:", err);
       setError(err.message || "Login failed. Please check your credentials.");
@@ -223,13 +236,7 @@ export default function LoginPage() {
                 </p>
               </div>
 
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleLogin(email, password);
-                }}
-                className="space-y-4"
-              >
+              <form onSubmit={handleLogin} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">
                     Email Address
