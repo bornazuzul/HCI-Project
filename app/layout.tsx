@@ -35,7 +35,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const pages = await getPages();
+  // const pages = await getPages();
 
   return (
     <html lang="en">
@@ -44,7 +44,8 @@ export default async function RootLayout({
       >
         <AppProvider>
           <header className="fixed top-0 left-0 right-0 z-50 bg-brand-fill-bg border-b border-brand-stroke-weak">
-            <Navigation pages={pages} />
+            {/* <Navigation pages={pages} /> */}
+            <Navigation />
           </header>
           <main className="pt-16">
             <NuqsAdapter>{children}</NuqsAdapter>

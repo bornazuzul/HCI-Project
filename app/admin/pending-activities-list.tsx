@@ -1,22 +1,9 @@
+// app/admin/pending-activities-list.tsx - UPDATED VERSION
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  approveActivity,
-  rejectActivity,
-  getPendingActivities,
-} from "@/lib/api/user-activities";
 import { toast } from "sonner";
-import {
-  Check,
-  X,
-  Calendar,
-  MapPin,
-  Users,
-  User,
-  Clock,
-  FileText,
-} from "lucide-react";
+import { Check, X, Calendar, MapPin, Users, User, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -30,9 +17,61 @@ interface Activity {
   location: string;
   maxApplicants: number;
   organizerId: string;
+  organizerName?: string;
+  organizerEmail?: string;
   status: string;
   createdAt: Date;
+  updatedAt?: Date;
 }
+
+// API helper functions - using YOUR existing API structure
+const getPendingActivities = async (): Promise<Activity[]> => {
+  const response = await fetch("/api/activities?status=pending");
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Failed to fetch pending activities");
+  }
+
+  const data = await response.json();
+  return data.data || [];
+};
+
+const approveActivity = async (activityId: string): Promise<void> => {
+  const response = await fetch("/api/activities", {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      action: "approve",
+      activityId: activityId,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Failed to approve activity");
+  }
+};
+
+const rejectActivity = async (activityId: string): Promise<void> => {
+  const response = await fetch("/api/activities", {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      action: "reject",
+      activityId: activityId,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Failed to reject activity");
+  }
+};
 
 export default function PendingActivitiesList() {
   const [activities, setActivities] = useState<Activity[]>([]);
@@ -49,9 +88,9 @@ export default function PendingActivitiesList() {
       setLoading(true);
       const data = await getPendingActivities();
       setActivities(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error loading pending activities:", error);
-      toast.error("Failed to load pending activities");
+      toast.error(error.message || "Failed to load pending activities");
     } finally {
       setLoading(false);
     }
@@ -66,8 +105,8 @@ export default function PendingActivitiesList() {
       setActivities((prev) => prev.filter((a) => a.id !== activityId));
 
       toast.success("Activity approved successfully!");
-    } catch (error) {
-      toast.error("Failed to approve activity");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to approve activity");
       console.error(error);
     } finally {
       setProcessing(null);
@@ -83,8 +122,8 @@ export default function PendingActivitiesList() {
       setActivities((prev) => prev.filter((a) => a.id !== activityId));
 
       toast.success("Activity rejected");
-    } catch (error) {
-      toast.error("Failed to reject activity");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to reject activity");
       console.error(error);
     } finally {
       setProcessing(null);
@@ -92,12 +131,16 @@ export default function PendingActivitiesList() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      weekday: "short",
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+    try {
+      return new Date(dateString).toLocaleDateString("en-US", {
+        weekday: "short",
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+    } catch (error) {
+      return dateString;
+    }
   };
 
   // Category badge colors
@@ -108,6 +151,8 @@ export default function PendingActivitiesList() {
       education: "bg-purple-100 text-purple-800",
       health: "bg-red-100 text-red-800",
       animals: "bg-amber-100 text-amber-800",
+      sports: "bg-orange-100 text-orange-800",
+      other: "bg-gray-100 text-gray-800",
     };
     return colors[category.toLowerCase()] || "bg-gray-100 text-gray-800";
   };
@@ -235,7 +280,12 @@ export default function PendingActivitiesList() {
                 </div>
 
                 <div className="text-xs text-gray-500">
-                  Submitted {new Date(activity.createdAt).toLocaleDateString()}
+                  Submitted{" "}
+                  {new Date(activity.createdAt).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  })}
                 </div>
               </div>
 
@@ -285,12 +335,20 @@ export default function PendingActivitiesList() {
                 <div className="flex items-center gap-2">
                   <User className="w-4 h-4 text-gray-400" />
                   <div>
-                    <p className="text-xs text-gray-500">Organizer ID</p>
+                    <p className="text-xs text-gray-500">
+                      {activity.organizerName ? "Organizer" : "Organizer ID"}
+                    </p>
                     <p className="text-sm font-medium font-mono">
-                      {activity.organizerId.slice(0, 8)}...
+                      {activity.organizerName ||
+                        activity.organizerId?.slice(0, 8) + "..."}
                     </p>
                   </div>
                 </div>
+                {activity.organizerEmail && (
+                  <div className="text-xs text-gray-500 mt-1">
+                    {activity.organizerEmail}
+                  </div>
+                )}
               </div>
             </div>
 

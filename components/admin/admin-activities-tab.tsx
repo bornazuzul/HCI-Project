@@ -1,3 +1,4 @@
+// components/admin/admin-activities-tab.tsx - FIXED VERSION
 "use client";
 
 import { useState, useEffect } from "react";
@@ -5,12 +6,6 @@ import { CheckCircle, XCircle, Trash2, RefreshCw } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  getActivitiesByStatus,
-  updateActivityStatus,
-  deleteActivity,
-  getActivityCounts,
-} from "@/lib/api/user-activities";
 
 interface Activity {
   id: string;
@@ -26,6 +21,79 @@ interface Activity {
   status: "pending" | "approved" | "rejected";
   createdAt: Date;
 }
+
+// API helper functions using fetch (safe for client components)
+const getActivitiesByStatus = async (status: string): Promise<Activity[]> => {
+  const response = await fetch(`/api/activities?status=${status}`);
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || `Failed to fetch ${status} activities`);
+  }
+  const data = await response.json();
+  return data.data || [];
+};
+
+const updateActivityStatus = async (
+  id: string,
+  status: "pending" | "approved" | "rejected"
+): Promise<void> => {
+  const response = await fetch("/api/activities", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: status === "approved" ? "approve" : "reject",
+      activityId: id,
+    }),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || `Failed to ${status} activity`);
+  }
+};
+
+const deleteActivity = async (id: string): Promise<void> => {
+  const response = await fetch(`/api/activities?id=${id}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Failed to delete activity");
+  }
+};
+
+const getActivityCounts = async (): Promise<{
+  pending: number;
+  approved: number;
+  rejected: number;
+}> => {
+  try {
+    // Fetch counts from each status
+    const [pendingRes, approvedRes, rejectedRes] = await Promise.all([
+      fetch("/api/activities?status=pending"),
+      fetch("/api/activities?status=approved"),
+      fetch("/api/activities?status=rejected"),
+    ]);
+
+    const [pendingData, approvedData, rejectedData] = await Promise.all([
+      pendingRes.json(),
+      approvedRes.json(),
+      rejectedRes.json(),
+    ]);
+
+    return {
+      pending: pendingData.pagination?.total || 0,
+      approved: approvedData.pagination?.total || 0,
+      rejected: rejectedData.pagination?.total || 0,
+    };
+  } catch (error) {
+    console.error("Error getting activity counts:", error);
+    return {
+      pending: 0,
+      approved: 0,
+      rejected: 0,
+    };
+  }
+};
 
 export default function AdminActivitiesTab() {
   const [activities, setActivities] = useState<Record<string, Activity[]>>({

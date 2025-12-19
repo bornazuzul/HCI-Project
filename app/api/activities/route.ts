@@ -211,3 +211,123 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { action, activityId } = body;
+
+    if (!action || !activityId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Missing required fields: action and activityId",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (action !== "approve" && action !== "reject") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Invalid action. Must be 'approve' or 'reject'",
+        },
+        { status: 400 }
+      );
+    }
+
+    const status = action === "approve" ? "approved" : "rejected";
+
+    // Update activity status
+    const [updatedActivity] = await db
+      .update(activities)
+      .set({
+        status,
+        updatedAt: new Date(),
+      })
+      .where(eq(activities.id, activityId))
+      .returning();
+
+    if (!updatedActivity) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Activity not found",
+        },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: `Activity ${action}d successfully`,
+      data: updatedActivity,
+    });
+  } catch (error: any) {
+    console.error("Error updating activity status:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Failed to update activity status",
+        details:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const activityId = searchParams.get("id");
+
+    if (!activityId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Activity ID is required",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Soft delete by setting status to 'deleted'
+    const [deletedActivity] = await db
+      .update(activities)
+      .set({
+        status: "deleted",
+        updatedAt: new Date(),
+      })
+      .where(eq(activities.id, activityId))
+      .returning();
+
+    if (!deletedActivity) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Activity not found",
+        },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Activity deleted successfully",
+      data: deletedActivity,
+    });
+  } catch (error: any) {
+    console.error("Error deleting activity:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Failed to delete activity",
+        details:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
+      },
+      { status: 500 }
+    );
+  }
+}
