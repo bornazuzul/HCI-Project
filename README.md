@@ -23,4 +23,4 @@
 - Link to Assignment 4: [**Assignment 4**](https://www.figma.com/design/Qot47ee38Ki6eJymclxHXn/VolunMe-Full-design?node-id=0-1&p=f&t=odmWsxBxiPrM3Y1b-0)
 - Link to Assignment 5: [**Assignment 5**](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/5_assigment.md)
 
-Live at: https://hci-project-pm3otknrd-cikoj77553-7803s-projects.vercel.app/
+Live at: https://hci-project-git-dev-cikoj77553-7803s-projects.vercel.app/
