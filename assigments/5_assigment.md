@@ -1,4 +1,4 @@
-# Next.js Dynamic Routes & Server-Side Data Fetching Project
+# Next.js Dynamic Routes & Server-Side Data Fetching
 
 ## 🚀 Tash Overview
 
@@ -12,8 +12,6 @@ All required tasks have been successfully completed.
 ---
 
 ## ✅ Completed Tasks
-
-### 1. Dynamic Routes
 
 - Implemented **dynamic routing** using Next.js.
 - Created a dynamic index page to display a list of resources (bactivities).
