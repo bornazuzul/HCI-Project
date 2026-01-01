@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { activities } from "@/db/schema";
 import { z } from "zod";
-import { eq, asc, sql } from "drizzle-orm";
-import { auth } from "@/lib/auth";
+import { eq, asc, sql, count } from "drizzle-orm";
 
 // Validation schema for activity creation
 const createActivitySchema = z.object({
@@ -34,6 +33,11 @@ export async function GET(request: NextRequest) {
     const pageSize = parseInt(searchParams.get("pageSize") || "6");
     const offset = (page - 1) * pageSize;
 
+    // Check if it's an admin request (no pagination needed)
+    const isAdminRequest =
+      searchParams.get("admin") === "true" ||
+      (status && ["pending", "approved", "rejected"].includes(status));
+
     // Build query
     let query = db
       .select({
@@ -60,50 +64,82 @@ export async function GET(request: NextRequest) {
       query = query.where(eq(activities.category, category));
     }
 
-    const data = await query
-      .orderBy(asc(activities.date), asc(activities.time))
-      .limit(pageSize)
-      .offset(offset);
+    // For admin requests, get all activities without pagination
+    if (isAdminRequest) {
+      const data = await query.orderBy(
+        asc(activities.date),
+        asc(activities.time)
+      );
 
-    // Get total count
-    let countQuery = db
-      .select({ count: sql<number>`count(*)` })
-      .from(activities)
-      .where(eq(activities.status, status));
-
-    if (category && category !== "all") {
-      countQuery = countQuery.where(eq(activities.category, category));
+      return NextResponse.json({
+        success: true,
+        data,
+        count: data.length,
+      });
     }
+    // For regular requests, use pagination
+    else {
+      const data = await query
+        .orderBy(asc(activities.date), asc(activities.time))
+        .limit(pageSize)
+        .offset(offset);
 
-    const countResult = await countQuery;
-    const total = Number(countResult[0]?.count) || 0;
+      // Get total count
+      let countQuery = db
+        .select({ count: sql<number>`count(*)` })
+        .from(activities)
+        .where(eq(activities.status, status));
 
-    return NextResponse.json({
-      success: true,
-      data,
-      pagination: {
-        page,
-        pageSize,
-        total,
-        totalPages: Math.ceil(total / pageSize),
-        hasNextPage: page * pageSize < total,
-        hasPrevPage: page > 1,
-      },
-    });
+      if (category && category !== "all") {
+        countQuery = countQuery.where(eq(activities.category, category));
+      }
+
+      const countResult = await countQuery;
+      const total = Number(countResult[0]?.count) || 0;
+
+      return NextResponse.json({
+        success: true,
+        data,
+        pagination: {
+          page,
+          pageSize,
+          total,
+          totalPages: Math.ceil(total / pageSize),
+          hasNextPage: page * pageSize < total,
+          hasPrevPage: page > 1,
+        },
+      });
+    }
   } catch (error: any) {
     console.error("Error fetching activities:", error);
-    return NextResponse.json({
-      success: true,
-      data: [],
-      pagination: {
-        page: 1,
-        pageSize: 6,
-        total: 0,
-        totalPages: 0,
-        hasNextPage: false,
-        hasPrevPage: false,
-      },
-    });
+
+    // Return empty array for admin requests, proper structure for regular requests
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get("status") || "approved";
+    const isAdminRequest =
+      searchParams.get("admin") === "true" ||
+      (status && ["pending", "approved", "rejected"].includes(status));
+
+    if (isAdminRequest) {
+      return NextResponse.json({
+        success: true,
+        data: [],
+        count: 0,
+      });
+    } else {
+      return NextResponse.json({
+        success: true,
+        data: [],
+        pagination: {
+          page: 1,
+          pageSize: 6,
+          total: 0,
+          totalPages: 0,
+          hasNextPage: false,
+          hasPrevPage: false,
+        },
+      });
+    }
   }
 }
 

@@ -23,13 +23,33 @@ interface Activity {
 
 // Helper functions for API calls
 const fetchActivitiesByStatus = async (status: string): Promise<Activity[]> => {
-  const response = await fetch(`/api/activities?status=${status}`);
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || `Failed to fetch ${status} activities`);
+  try {
+    const response = await fetch(`/api/activities?status=${status}`);
+
+    if (!response.ok) {
+      let errorMessage = `Failed to fetch ${status} activities`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.error || errorMessage;
+      } catch {
+        errorMessage = `${response.status} ${response.statusText}`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+
+    if (!data.data && !Array.isArray(data)) {
+      console.error("Unexpected API response structure:", data);
+      return [];
+    }
+
+    const activities = data.data || data;
+    return Array.isArray(activities) ? activities : [];
+  } catch (error) {
+    console.error(`Error fetching ${status} activities:`, error);
+    return [];
   }
-  const data = await response.json();
-  return data.data || [];
 };
 
 const fetchActivityCounts = async (): Promise<{
@@ -37,45 +57,65 @@ const fetchActivityCounts = async (): Promise<{
   approved: number;
   rejected: number;
 }> => {
-  const response = await fetch("/api/activities/counts");
-  if (!response.ok) {
-    // Fallback to fetching all statuses and counting manually
-    const [pendingRes, approvedRes, rejectedRes] = await Promise.all([
-      fetch("/api/activities?status=pending"),
-      fetch("/api/activities?status=approved"),
-      fetch("/api/activities?status=rejected"),
-    ]);
+  try {
+    const response = await fetch("/api/activities/counts");
 
-    const [pendingData, approvedData, rejectedData] = await Promise.all([
-      pendingRes.ok ? pendingRes.json() : { data: [] },
-      approvedRes.ok ? approvedRes.json() : { data: [] },
-      rejectedRes.ok ? rejectedRes.json() : { data: [] },
+    if (response.ok) {
+      const data = await response.json();
+      return {
+        pending: data.pending || 0,
+        approved: data.approved || 0,
+        rejected: data.rejected || 0,
+      };
+    }
+
+    // Fallback: count from individual status fetches
+    console.log("Counts endpoint failed, using fallback...");
+    const [pending, approved, rejected] = await Promise.all([
+      fetchActivitiesByStatus("pending"),
+      fetchActivitiesByStatus("approved"),
+      fetchActivitiesByStatus("rejected"),
     ]);
 
     return {
-      pending: pendingData.data?.length || 0,
-      approved: approvedData.data?.length || 0,
-      rejected: rejectedData.data?.length || 0,
+      pending: pending.length,
+      approved: approved.length,
+      rejected: rejected.length,
+    };
+  } catch (error) {
+    console.error("Error fetching activity counts:", error);
+    return {
+      pending: 0,
+      approved: 0,
+      rejected: 0,
     };
   }
-  return await response.json();
 };
 
 const updateActivityStatus = async (
   id: string,
   status: "pending" | "approved" | "rejected"
 ): Promise<void> => {
+  const action = status === "approved" ? "approve" : "reject";
+
   const response = await fetch("/api/activities", {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      action: status === "approved" ? "approve" : "reject",
+      action,
       activityId: id,
     }),
   });
+
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || `Failed to ${status} activity`);
+    let errorMessage = `Failed to ${action} activity`;
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.error || errorMessage;
+    } catch {
+      errorMessage = `${response.status} ${response.statusText}`;
+    }
+    throw new Error(errorMessage);
   }
 };
 
@@ -83,9 +123,16 @@ const deleteActivity = async (id: string): Promise<void> => {
   const response = await fetch(`/api/activities?id=${id}`, {
     method: "DELETE",
   });
+
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Failed to delete activity");
+    let errorMessage = "Failed to delete activity";
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.error || errorMessage;
+    } catch {
+      errorMessage = `${response.status} ${response.statusText}`;
+    }
+    throw new Error(errorMessage);
   }
 };
 
@@ -102,8 +149,8 @@ export default function AdminActivitiesTab() {
     rejected: 0,
   });
   const [processing, setProcessing] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  // Load activities on component mount
   useEffect(() => {
     loadAllActivities();
   }, []);
@@ -111,25 +158,43 @@ export default function AdminActivitiesTab() {
   const loadAllActivities = async () => {
     setLoading(true);
     try {
-      // Fetch activities by status
+      console.log("Loading all activities...");
+
+      // Fetch activities by status in parallel
       const [pending, approved, rejected] = await Promise.all([
         fetchActivitiesByStatus("pending"),
         fetchActivitiesByStatus("approved"),
         fetchActivitiesByStatus("rejected"),
       ]);
 
-      // Fetch counts
+      console.log("Fetched activities:", {
+        pending: pending.length,
+        approved: approved.length,
+        rejected: rejected.length,
+      });
+
       const activityCounts = await fetchActivityCounts();
 
+      // Sort activities by createdAt date in descending order (newest first)
+      const sortByCreatedAtDesc = (a: Activity, b: Activity) => {
+        const dateA = new Date(a.createdAt).getTime();
+        const dateB = new Date(b.createdAt).getTime();
+        return dateB - dateA;
+      };
+
       setActivities({
-        pending,
-        approved,
-        rejected,
+        pending: [...pending].sort(sortByCreatedAtDesc),
+        approved: [...approved].sort(sortByCreatedAtDesc),
+        rejected: [...rejected].sort(sortByCreatedAtDesc),
       });
       setCounts(activityCounts);
+      setLastUpdated(new Date());
     } catch (error) {
       console.error("Error loading activities:", error);
-      // Set default empty state on error
+      alert(
+        "Failed to load activities. Please check your connection and try again."
+      );
+
       setActivities({
         pending: [],
         approved: [],
@@ -148,6 +213,7 @@ export default function AdminActivitiesTab() {
   const handleApprove = async (id: string) => {
     setProcessing(id);
     try {
+      console.log("Approving activity:", id);
       await updateActivityStatus(id, "approved");
       await loadAllActivities();
     } catch (error) {
@@ -165,6 +231,7 @@ export default function AdminActivitiesTab() {
   const handleReject = async (id: string) => {
     setProcessing(id);
     try {
+      console.log("Rejecting activity:", id);
       await updateActivityStatus(id, "rejected");
       await loadAllActivities();
     } catch (error) {
@@ -180,8 +247,17 @@ export default function AdminActivitiesTab() {
   };
 
   const handleDelete = async (id: string) => {
+    if (
+      !confirm(
+        "Are you sure you want to delete this activity? This action cannot be undone."
+      )
+    ) {
+      return;
+    }
+
     setProcessing(id);
     try {
+      console.log("Deleting activity:", id);
       await deleteActivity(id);
       await loadAllActivities();
     } catch (error) {
@@ -194,6 +270,26 @@ export default function AdminActivitiesTab() {
     } finally {
       setProcessing(null);
     }
+  };
+
+  const formatDate = (date: Date | string) => {
+    const dateObj = typeof date === "string" ? new Date(date) : date;
+    return dateObj.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  const formatDateTime = (date: Date | string) => {
+    const dateObj = typeof date === "string" ? new Date(date) : date;
+    return dateObj.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   const ActivityList = ({
@@ -232,7 +328,10 @@ export default function AdminActivitiesTab() {
     return (
       <div className="space-y-3">
         {items.map((activity) => (
-          <Card key={activity.id} className="p-4">
+          <Card
+            key={activity.id}
+            className="p-4 hover:shadow-md transition-shadow"
+          >
             <div className="flex flex-col gap-4">
               <div className="flex flex-col sm:flex-row justify-between items-start gap-3">
                 <div className="flex-grow">
@@ -248,27 +347,32 @@ export default function AdminActivitiesTab() {
                           ? "bg-blue-100 text-blue-700"
                           : activity.category === "education"
                           ? "bg-purple-100 text-purple-700"
-                          : "bg-muted text-muted-foreground"
+                          : activity.category === "sports"
+                          ? "bg-orange-100 text-orange-700"
+                          : activity.category === "health"
+                          ? "bg-red-100 text-red-700"
+                          : "bg-gray-100 text-gray-700"
                       }`}
                     >
                       {activity.category}
                     </span>
                   </div>
-                  <p className="text-sm text-muted-foreground mb-2">
+                  <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
                     {activity.description}
                   </p>
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  Submitted {new Date(activity.createdAt).toLocaleDateString()}
+                <div className="text-xs text-muted-foreground whitespace-nowrap">
+                  Submitted: {formatDateTime(activity.createdAt)}
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
                 <div>
-                  <span className="text-muted-foreground">Date & Time:</span>
+                  <span className="text-muted-foreground">
+                    Event Date & Time:
+                  </span>
                   <p className="text-foreground font-medium">
-                    {new Date(activity.date).toLocaleDateString()} at{" "}
-                    {activity.time}
+                    {formatDate(activity.date)} at {activity.time}
                   </p>
                 </div>
                 <div>
@@ -307,7 +411,7 @@ export default function AdminActivitiesTab() {
                   <Button
                     size="sm"
                     onClick={() => handleApprove(activity.id)}
-                    className="gap-1"
+                    className="gap-1 bg-green-600 hover:bg-green-700"
                     disabled={processing === activity.id}
                   >
                     {processing === activity.id ? (
@@ -321,7 +425,7 @@ export default function AdminActivitiesTab() {
                     size="sm"
                     variant="outline"
                     onClick={() => handleReject(activity.id)}
-                    className="gap-1"
+                    className="gap-1 text-red-600 border-red-600 hover:bg-red-50"
                     disabled={processing === activity.id}
                   >
                     {processing === activity.id ? (
@@ -340,7 +444,7 @@ export default function AdminActivitiesTab() {
                     size="sm"
                     variant="outline"
                     onClick={() => handleDelete(activity.id)}
-                    className="gap-1"
+                    className="gap-1 text-red-600 border-red-200 hover:bg-red-50"
                     disabled={processing === activity.id}
                   >
                     {processing === activity.id ? (
@@ -368,6 +472,16 @@ export default function AdminActivitiesTab() {
           </h2>
           <p className="text-muted-foreground mt-1">
             Review and manage volunteer activities
+            {lastUpdated && (
+              <span className="text-xs ml-2">
+                (Last updated:{" "}
+                {lastUpdated.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+                )
+              </span>
+            )}
           </p>
         </div>
         <Button
@@ -427,23 +541,44 @@ export default function AdminActivitiesTab() {
         </TabsList>
 
         <TabsContent value="pending" className="mt-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">
-            Pending Activities ({activities.pending.length})
-          </h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-foreground">
+              Pending Activities ({activities.pending.length})
+            </h3>
+            {activities.pending.length > 0 && (
+              <span className="text-sm text-muted-foreground">
+                Newest first • Requires admin review
+              </span>
+            )}
+          </div>
           <ActivityList items={activities.pending} showActions />
         </TabsContent>
 
         <TabsContent value="approved" className="mt-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">
-            Approved Activities ({activities.approved.length})
-          </h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-foreground">
+              Approved Activities ({activities.approved.length})
+            </h3>
+            {activities.approved.length > 0 && (
+              <span className="text-sm text-green-600">
+                Newest first • Visible to volunteers
+              </span>
+            )}
+          </div>
           <ActivityList items={activities.approved} />
         </TabsContent>
 
         <TabsContent value="rejected" className="mt-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">
-            Rejected Activities ({activities.rejected.length})
-          </h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-foreground">
+              Rejected Activities ({activities.rejected.length})
+            </h3>
+            {activities.rejected.length > 0 && (
+              <span className="text-sm text-red-600">
+                Newest first • Hidden from volunteers
+              </span>
+            )}
+          </div>
           <ActivityList items={activities.rejected} />
         </TabsContent>
       </Tabs>
