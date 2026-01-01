@@ -1,4 +1,3 @@
-// app/api/activities/route.ts - UPDATED FOR NEW USER SYSTEM
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { activities } from "@/db/schema";

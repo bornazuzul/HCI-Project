@@ -60,7 +60,6 @@ export async function getActivitiesCount(category?: string) {
   return Number(result[0]?.count) || 0;
 }
 
-// Keep this for getting activity by ID (now includes status check)
 export async function getActivityById(id: string) {
   const data = await db
     .select()
@@ -76,7 +75,6 @@ export async function getActivityById(id: string) {
   return data[0] ?? null;
 }
 
-// New function to get activity by ID for admin (includes all statuses)
 export async function getActivityByIdAdmin(id: string) {
   const data = await db
     .select()

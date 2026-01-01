@@ -66,39 +66,6 @@ export default function AdminDashboard() {
                 <PendingActivitiesList />
               </div>
             )}
-
-            {activeTab === "activities" && (
-              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                  All Activities
-                </h2>
-                <p className="text-gray-500">
-                  Coming soon: View all approved activities
-                </p>
-              </div>
-            )}
-
-            {activeTab === "users" && (
-              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                  User Management
-                </h2>
-                <p className="text-gray-500">
-                  Coming soon: Manage user accounts and roles
-                </p>
-              </div>
-            )}
-
-            {activeTab === "analytics" && (
-              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                  Analytics
-                </h2>
-                <p className="text-gray-500">
-                  Coming soon: View platform analytics and insights
-                </p>
-              </div>
-            )}
           </div>
         </div>
       </main>

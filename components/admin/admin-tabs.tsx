@@ -1,26 +1,28 @@
-"use client"
-import AdminActivitiesTab from "./admin-activities-tab"
-import AdminNotificationsTab from "./admin-notifications-tab"
-import AdminUsersTab from "./admin-users-tab"
+"use client";
+import AdminActivitiesTab from "./admin-activities-tab";
+import AdminNotificationsTab from "./admin-notifications-tab";
+import AdminUsersTab from "./admin-users-tab";
 
 interface AdminTabsProps {
-  activeTab: string
-  setActiveTab: (tab: string) => void
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
 }
 
 export default function AdminTabs({ activeTab, setActiveTab }: AdminTabsProps) {
   const tabs = [
     { id: "activities", label: "Activities", icon: "📋" },
-    { id: "notifications", label: "Notifications", icon: "🔔" },
+    // { id: "notifications", label: "Notifications", icon: "🔔" },
     { id: "users", label: "Users", icon: "👥" },
-  ]
+  ];
 
   return (
     <div className="px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/* Tab Buttons */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-6">Admin Dashboard</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-6">
+            Admin Dashboard
+          </h1>
           <div className="flex gap-2 border-b border-border">
             {tabs.map((tab) => (
               <button
@@ -46,5 +48,5 @@ export default function AdminTabs({ activeTab, setActiveTab }: AdminTabsProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }

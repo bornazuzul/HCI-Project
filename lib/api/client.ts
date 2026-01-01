@@ -1,6 +1,3 @@
-// lib/api/client.ts
-// Client-side API calls (no database imports here)
-
 export async function fetchActivitiesByStatus(
   status: "pending" | "approved" | "rejected"
 ) {
@@ -41,8 +38,6 @@ export async function deleteActivity(id: string) {
 }
 
 export async function getActivityStats() {
-  // For client-side, you might want a separate endpoint for stats
-  // Or combine multiple calls
   const [pending, approved, rejected] = await Promise.all([
     fetch("/api/activities?status=pending").then((r) => r.json()),
     fetch("/api/activities?status=approved").then((r) => r.json()),

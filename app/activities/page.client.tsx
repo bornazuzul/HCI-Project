@@ -42,7 +42,6 @@ export default function ActivitiesPageClient({
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <main className="pt-16 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          {/* Enhanced Header */}
           <div className="text-center mb-10">
             <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
               Volunteer Activities
@@ -71,9 +70,8 @@ export default function ActivitiesPageClient({
                 </div>
               </div>
 
-              {/* Main Content Area */}
+              {/* Main */}
               <div className="lg:w-3/4">
-                {/* Page Info */}
                 <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                     <div>
@@ -103,7 +101,7 @@ export default function ActivitiesPageClient({
                   isLoggedIn={isLoggedIn}
                 />
 
-                {/* Enhanced Pagination */}
+                {/* Pagination */}
                 {totalPages > 1 && (
                   <div className="mt-10">
                     <Pagination

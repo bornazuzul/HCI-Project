@@ -1,4 +1,3 @@
-// components/admin/admin-activities-tab.tsx - FIXED VERSION
 "use client";
 
 import { useState, useEffect } from "react";
@@ -22,8 +21,8 @@ interface Activity {
   createdAt: Date;
 }
 
-// API helper functions using fetch (safe for client components)
-const getActivitiesByStatus = async (status: string): Promise<Activity[]> => {
+// Helper functions for API calls
+const fetchActivitiesByStatus = async (status: string): Promise<Activity[]> => {
   const response = await fetch(`/api/activities?status=${status}`);
   if (!response.ok) {
     const error = await response.json();
@@ -31,6 +30,35 @@ const getActivitiesByStatus = async (status: string): Promise<Activity[]> => {
   }
   const data = await response.json();
   return data.data || [];
+};
+
+const fetchActivityCounts = async (): Promise<{
+  pending: number;
+  approved: number;
+  rejected: number;
+}> => {
+  const response = await fetch("/api/activities/counts");
+  if (!response.ok) {
+    // Fallback to fetching all statuses and counting manually
+    const [pendingRes, approvedRes, rejectedRes] = await Promise.all([
+      fetch("/api/activities?status=pending"),
+      fetch("/api/activities?status=approved"),
+      fetch("/api/activities?status=rejected"),
+    ]);
+
+    const [pendingData, approvedData, rejectedData] = await Promise.all([
+      pendingRes.ok ? pendingRes.json() : { data: [] },
+      approvedRes.ok ? approvedRes.json() : { data: [] },
+      rejectedRes.ok ? rejectedRes.json() : { data: [] },
+    ]);
+
+    return {
+      pending: pendingData.data?.length || 0,
+      approved: approvedData.data?.length || 0,
+      rejected: rejectedData.data?.length || 0,
+    };
+  }
+  return await response.json();
 };
 
 const updateActivityStatus = async (
@@ -61,40 +89,6 @@ const deleteActivity = async (id: string): Promise<void> => {
   }
 };
 
-const getActivityCounts = async (): Promise<{
-  pending: number;
-  approved: number;
-  rejected: number;
-}> => {
-  try {
-    // Fetch counts from each status
-    const [pendingRes, approvedRes, rejectedRes] = await Promise.all([
-      fetch("/api/activities?status=pending"),
-      fetch("/api/activities?status=approved"),
-      fetch("/api/activities?status=rejected"),
-    ]);
-
-    const [pendingData, approvedData, rejectedData] = await Promise.all([
-      pendingRes.json(),
-      approvedRes.json(),
-      rejectedRes.json(),
-    ]);
-
-    return {
-      pending: pendingData.pagination?.total || 0,
-      approved: approvedData.pagination?.total || 0,
-      rejected: rejectedData.pagination?.total || 0,
-    };
-  } catch (error) {
-    console.error("Error getting activity counts:", error);
-    return {
-      pending: 0,
-      approved: 0,
-      rejected: 0,
-    };
-  }
-};
-
 export default function AdminActivitiesTab() {
   const [activities, setActivities] = useState<Record<string, Activity[]>>({
     pending: [],
@@ -117,12 +111,15 @@ export default function AdminActivitiesTab() {
   const loadAllActivities = async () => {
     setLoading(true);
     try {
-      const [pending, approved, rejected, activityCounts] = await Promise.all([
-        getActivitiesByStatus("pending"),
-        getActivitiesByStatus("approved"),
-        getActivitiesByStatus("rejected"),
-        getActivityCounts(),
+      // Fetch activities by status
+      const [pending, approved, rejected] = await Promise.all([
+        fetchActivitiesByStatus("pending"),
+        fetchActivitiesByStatus("approved"),
+        fetchActivitiesByStatus("rejected"),
       ]);
+
+      // Fetch counts
+      const activityCounts = await fetchActivityCounts();
 
       setActivities({
         pending,
@@ -132,6 +129,17 @@ export default function AdminActivitiesTab() {
       setCounts(activityCounts);
     } catch (error) {
       console.error("Error loading activities:", error);
+      // Set default empty state on error
+      setActivities({
+        pending: [],
+        approved: [],
+        rejected: [],
+      });
+      setCounts({
+        pending: 0,
+        approved: 0,
+        rejected: 0,
+      });
     } finally {
       setLoading(false);
     }
@@ -141,10 +149,14 @@ export default function AdminActivitiesTab() {
     setProcessing(id);
     try {
       await updateActivityStatus(id, "approved");
-      // Refresh the activities list
       await loadAllActivities();
     } catch (error) {
       console.error("Error approving activity:", error);
+      alert(
+        `Failed to approve activity: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     } finally {
       setProcessing(null);
     }
@@ -154,10 +166,14 @@ export default function AdminActivitiesTab() {
     setProcessing(id);
     try {
       await updateActivityStatus(id, "rejected");
-      // Refresh the activities list
       await loadAllActivities();
     } catch (error) {
       console.error("Error rejecting activity:", error);
+      alert(
+        `Failed to reject activity: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     } finally {
       setProcessing(null);
     }
@@ -167,10 +183,14 @@ export default function AdminActivitiesTab() {
     setProcessing(id);
     try {
       await deleteActivity(id);
-      // Refresh the activities list
       await loadAllActivities();
     } catch (error) {
       console.error("Error deleting activity:", error);
+      alert(
+        `Failed to delete activity: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     } finally {
       setProcessing(null);
     }
