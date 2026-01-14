@@ -3,6 +3,21 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@/db";
 import { user, account, session, verification } from "@/db/auth-schema";
 
+const getTrustedOrigins = () => {
+  const origins = ["http://localhost:3000", "https://localhost:3000"];
+
+  // Add the current baseURL
+  if (process.env.BETTER_AUTH_URL) {
+    origins.push(process.env.BETTER_AUTH_URL);
+  }
+
+  // Add common Vercel patterns
+  origins.push("https://hci-project-rho.vercel.app");
+  origins.push("https://hci-project-*.vercel.app");
+
+  return origins;
+};
+
 export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET || "dev-secret-change-in-production",
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
@@ -35,7 +50,7 @@ export const auth = betterAuth({
   advanced: {
     cookiePrefix: "better-auth",
   },
-  trustedOrigins: ["http://localhost:3000"],
+  trustedOrigins: getTrustedOrigins(),
 });
 
 // Type declarations for BetterAuth
