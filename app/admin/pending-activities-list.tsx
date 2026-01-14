@@ -1,4 +1,3 @@
-// app/admin/pending-activities-list.tsx - UPDATED VERSION
 "use client";
 
 import { useState, useEffect } from "react";

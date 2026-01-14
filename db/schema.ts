@@ -28,35 +28,8 @@ export const profiles = pgTable("profiles", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Activities table
-export const activities = pgTable("activities", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  title: text("title").notNull(),
-  description: text("description").notNull(),
-  category: text("category").notNull(),
-  date: date("date").notNull(),
-  time: text("time").notNull(),
-  location: text("location").notNull(),
-  maxApplicants: integer("max_applicants").notNull(),
-  currentApplicants: integer("current_applicants").default(0),
-  organizerId: text("organizer_id"), // text to match user.id
-  organizerName: text("organizer_name"),
-  organizerEmail: text("organizer_email"),
-  status: text("status").notNull().default("pending"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-// Activity applications table
-export const activityApplications = pgTable("activity_applications", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  activityId: uuid("activity_id").references(() => activities.id),
-  userId: text("user_id"), // text to match user.id
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
 export const user = pgTable("user", {
-  id: text("id").primaryKey(),
+  id: text("id").primaryKey(), // Better Auth uses text IDs
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").default(false).notNull(),
@@ -69,61 +42,53 @@ export const user = pgTable("user", {
     .notNull(),
 });
 
-export const session = pgTable(
-  "session",
+export const activities = pgTable(
+  "activities",
   {
-    id: text("id").primaryKey(),
-    expiresAt: timestamp("expires_at").notNull(),
-    token: text("token").notNull().unique(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at")
-      .$onUpdate(() => new Date())
-      .notNull(),
-    ipAddress: text("ip_address"),
-    userAgent: text("user_agent"),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    id: uuid("id").defaultRandom().primaryKey(),
+    title: text("title").notNull(),
+    description: text("description").notNull(),
+    category: text("category").notNull(),
+    date: date("date").notNull(),
+    time: text("time").notNull(),
+    location: text("location").notNull(),
+    maxApplicants: integer("max_applicants").notNull(),
+    currentApplicants: integer("current_applicants").default(0),
+    // Support both old and new auth systems
+    organizerId: uuid("organizer_id"), // Old system (UUID)
+    betterAuthOrganizerId: text("better_auth_organizer_id"), // Better Auth (text)
+    organizerName: text("organizer_name"),
+    organizerEmail: text("organizer_email"),
+    status: text("status").notNull().default("pending"),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
   },
-  (table) => [index("session_userId_idx").on(table.userId)]
+  (table) => [
+    index("activities_status_idx").on(table.status),
+    index("activities_date_idx").on(table.date),
+    index("activities_category_idx").on(table.category),
+  ]
 );
 
-export const account = pgTable(
-  "account",
+// Activity applications table
+export const activityApplications = pgTable(
+  "activity_applications",
   {
-    id: text("id").primaryKey(),
-    accountId: text("account_id").notNull(),
-    providerId: text("provider_id").notNull(),
-    userId: text("user_id")
+    id: uuid("id").defaultRandom().primaryKey(),
+    activityId: uuid("activity_id")
       .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
-    accessToken: text("access_token"),
-    refreshToken: text("refresh_token"),
-    idToken: text("id_token"),
-    accessTokenExpiresAt: timestamp("access_token_expires_at"),
-    refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
-    scope: text("scope"),
-    password: text("password"),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at")
-      .$onUpdate(() => new Date())
-      .notNull(),
+      .references(() => activities.id, { onDelete: "cascade" }),
+    userId: uuid("user_id"), // Old system (UUID)
+    betterAuthUserId: text("better_auth_user_id"), // Better Auth (text)
+    createdAt: timestamp("created_at").defaultNow(),
   },
-  (table) => [index("account_userId_idx").on(table.userId)]
-);
-
-export const verification = pgTable(
-  "verification",
-  {
-    id: text("id").primaryKey(),
-    identifier: text("identifier").notNull(),
-    value: text("value").notNull(),
-    expiresAt: timestamp("expires_at").notNull(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at")
-      .defaultNow()
-      .$onUpdate(() => new Date())
-      .notNull(),
-  },
-  (table) => [index("verification_identifier_idx").on(table.identifier)]
+  (table) => [
+    index("activity_apps_activity_user_unique").on(
+      table.activityId,
+      table.userId,
+      table.betterAuthUserId
+    ),
+    index("activity_apps_activity_id_idx").on(table.activityId),
+    index("activity_apps_better_auth_user_id_idx").on(table.betterAuthUserId),
+  ]
 );

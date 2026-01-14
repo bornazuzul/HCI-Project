@@ -1,49 +1,113 @@
-import { getNotifications } from "@/lib/api/notifications";
+import {
+  getNotifications,
+  getNotificationsCount,
+} from "@/lib/api/notifications";
+import { Pagination } from "../_components/Pagination";
+import { NotificationSearch } from "@/components/notifications/notification-search";
+import { NotificationTypeFilter } from "@/components/notifications/notification-type-filter";
+import { NotificationDateFilter } from "@/components/notifications/notification-date-filter";
+import { formatNotificationDate } from "@/lib/utils";
+
+const PAGE_SIZE = 12;
 
 interface NotificationsPageProps {
   searchParams: Promise<{
-    q?: string | string[];
-    type?: string | string[];
+    q?: string;
+    type?: string;
+    page?: string;
+    days?: string;
   }>;
 }
+
+const NOTIFICATION_TYPE_STYLES: Record<
+  string,
+  { label: string; className: string }
+> = {
+  announcment: {
+    label: "Announcement",
+    className: "bg-blue-100 text-blue-700",
+  },
+  "activity-update": {
+    label: "Activity update",
+    className: "bg-green-100 text-green-700",
+  },
+  reminder: {
+    label: "Reminder",
+    className: "bg-yellow-100 text-yellow-800",
+  },
+};
 
 export default async function NotificationsPage({
   searchParams,
 }: NotificationsPageProps) {
-  const params = await searchParams; // 🔑 THIS WAS MISSING
+  const params = await searchParams;
 
-  const notifications = await getNotifications();
+  const query = params.q;
+  const type = params.type;
+  const page = Number(params.page) > 0 ? Number(params.page) : 1;
+  const days = params.days ? Number(params.days) : undefined;
 
-  const query = typeof params.q === "string" ? params.q.toLowerCase() : "";
+  const [notifications, total] = await Promise.all([
+    getNotifications({
+      page,
+      pageSize: PAGE_SIZE,
+      query,
+      type,
+      days,
+    }),
+    getNotificationsCount({
+      query,
+      type,
+      days,
+    }),
+  ]);
 
-  const type = typeof params.type === "string" ? params.type : undefined;
-
-  const filtered = notifications.filter((n) => {
-    const matchesQuery =
-      !query ||
-      n.title.toLowerCase().includes(query) ||
-      n.message.toLowerCase().includes(query);
-
-    const matchesType = type ? n.type === type : true;
-
-    return matchesQuery && matchesType;
-  });
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
-    <main className="p-6 space-y-4">
+    <main className="max-w-4xl mx-auto p-6 space-y-6">
       <h1 className="text-2xl font-bold">Notifications</h1>
 
-      {filtered.length === 0 && (
+      <div className="space-y-4">
+        <NotificationSearch />
+        <NotificationTypeFilter />
+        <NotificationDateFilter />
+      </div>
+
+      {notifications.length === 0 && (
         <p className="text-gray-500">No notifications found.</p>
       )}
 
-      {filtered.map((n) => (
-        <div key={n.id} className="border rounded-md p-4 bg-white shadow-sm">
-          <h2 className="font-semibold">{n.title}</h2>
-          <p className="text-sm text-gray-600">{n.message}</p>
-          <span className="text-xs text-gray-400">{n.type}</span>
-        </div>
-      ))}
+      <div className="space-y-3">
+        {notifications.map((n) => (
+          <div
+            key={n.id}
+            className="border rounded-lg p-4 bg-white hover:shadow transition"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs text-gray-400 mb-1">
+                  {formatNotificationDate(n.createdAt || n.timeStamp)}
+                </p>
+                <h2 className="font-semibold">{n.title}</h2>
+              </div>
+
+              <span
+                className={`text-xs px-2 py-1 rounded font-medium whitespace-nowrap ${
+                  NOTIFICATION_TYPE_STYLES[n.type]?.className ??
+                  "bg-gray-100 text-gray-600"
+                }`}
+              >
+                {NOTIFICATION_TYPE_STYLES[n.type]?.label ?? n.type}
+              </span>
+            </div>
+
+            <p className="text-sm text-gray-600 mt-1">{n.message}</p>
+          </div>
+        ))}
+      </div>
+
+      <Pagination currentPage={page} totalPages={totalPages} className="pt-4" />
     </main>
   );
 }

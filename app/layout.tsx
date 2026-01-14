@@ -6,6 +6,7 @@ import { Navigation } from "./_components/navigation";
 import { AppProvider } from "./providers";
 // import { getPages } from "@/lib/api/pages";
 import AuthDebugger from "@/components/debug/auth-debugger";
+import AuthStateDebug from "./api/auth/debug/auth-state";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -51,6 +52,7 @@ export default async function RootLayout({
           </header>
           <main className="pt-16">
             <NuqsAdapter>{children}</NuqsAdapter>
+            {/* <AuthStateDebug /> */}
           </main>
         </AppProvider>
       </body>

@@ -163,7 +163,7 @@ export default function LoginPage() {
                           Email:
                         </span>
                         <code className="text-xs bg-primary/10 px-3 py-1.5 rounded flex-1 font-mono break-all">
-                          john@example.com
+                          user@volunme.com
                         </code>
                       </div>
                       <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
@@ -187,7 +187,7 @@ export default function LoginPage() {
                           Email:
                         </span>
                         <code className="text-xs bg-secondary/10 px-3 py-1.5 rounded flex-1 font-mono break-all text-secondary">
-                          admin@test.com
+                          admin@volunme.com
                         </code>
                       </div>
                       <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
@@ -195,7 +195,7 @@ export default function LoginPage() {
                           Password:
                         </span>
                         <code className="text-xs bg-secondary/10 px-3 py-1.5 rounded flex-1 font-mono text-secondary">
-                          Admin12345678
+                          Admin123
                         </code>
                       </div>
                     </div>

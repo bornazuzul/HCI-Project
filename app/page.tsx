@@ -1,7 +1,6 @@
 "use client";
 
 import { useApp } from "@/app/providers";
-import Navigation from "@/components/navigation";
 import HeroSection from "@/components/hero-section";
 import FeaturesSection from "@/components/features-section";
 import CTASection from "@/components/cta-section";
@@ -18,7 +17,7 @@ export default function Home() {
       <main>
         <HeroSection isLoggedIn={isLoggedIn} />
         <FeaturesSection />
-        <StatsSection />
+        {/* <StatsSection /> */}
         <CTASection isLoggedIn={isLoggedIn} />
       </main>
     </div>
