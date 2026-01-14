@@ -1,0 +1,5 @@
+title,path,include_in_prod
+Home,/,true
+Activities,/activities,true
+Notifications,/notifications,true
+Admin,/admin,true
