@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase";
+import { authClient } from "@/lib/auth/auth-client";
 
 export interface AppUser {
   id: string;
@@ -41,111 +41,51 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-  const supabase = createClient();
 
-  // Function to refresh auth state
-  const refreshAuth = async () => {
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+  // Use Better Auth's useSession hook for client-side state
+  const { data: session, isPending: sessionLoading } = authClient.useSession();
 
-      if (session?.user) {
-        // Get user profile
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", session.user.id)
-          .single();
+  // Sync Better Auth session with our local state
+  useEffect(() => {
+    if (sessionLoading) {
+      setIsLoading(true);
+      return;
+    }
 
-        if (profile) {
-          setUser({
-            id: profile.id,
-            email: profile.email,
-            name: profile.name,
-            role: profile.role as "user" | "admin",
-          });
-          setIsLoggedIn(true);
-        }
-      } else {
-        setUser(null);
-        setIsLoggedIn(false);
-      }
-    } catch (error) {
-      console.error("Error refreshing auth:", error);
+    console.log("🔄 Syncing Better Auth session:", session);
+
+    if (session?.user) {
+      const sessionUser = session.user;
+      setUser({
+        id: sessionUser.id,
+        email: sessionUser.email || "",
+        name: sessionUser.name || "User",
+        role: (sessionUser.role as "user" | "admin") || "user",
+      });
+      setIsLoggedIn(true);
+      console.log("✅ Client-side user set:", sessionUser.email);
+    } else {
       setUser(null);
       setIsLoggedIn(false);
-    } finally {
-      setIsLoading(false);
+      console.log("ℹ️ No client-side session");
     }
-  };
 
-  // Check for existing session on mount
-  useEffect(() => {
-    console.log("🔍 AppProvider mounting, checking session...");
-    refreshAuth();
-  }, []);
-
-  // Listen for auth changes
-  useEffect(() => {
-    console.log("🔍 Setting up auth state listener...");
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("🔄 Auth state changed:", event, "Has session:", !!session);
-
-      if (event === "SIGNED_IN" && session?.user) {
-        console.log("✅ User signed in:", session.user.email);
-
-        // Get user profile
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", session.user.id)
-          .single();
-
-        if (profile) {
-          console.log("✅ Profile loaded:", profile.email);
-          setUser({
-            id: profile.id,
-            email: profile.email,
-            name: profile.name,
-            role: profile.role as "user" | "admin",
-          });
-          setIsLoggedIn(true);
-
-          // Force a small delay before redirect to ensure state is updated
-          setTimeout(() => {
-            console.log("🔄 Redirecting after sign in...");
-            router.push("/");
-            router.refresh();
-          }, 300);
-        }
-      } else if (event === "SIGNED_OUT") {
-        console.log("ℹ️ User signed out");
-        setUser(null);
-        setIsLoggedIn(false);
-        router.push("/login");
-        router.refresh();
-      } else if (event === "TOKEN_REFRESHED") {
-        console.log("ℹ️ Token refreshed");
-        // Refresh auth state
-        await refreshAuth();
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [router, supabase.auth]);
+    setIsLoading(false);
+  }, [session, sessionLoading]);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
       console.log("🔐 Attempting login for:", email);
 
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await authClient.signIn.email({
         email: email.trim(),
         password: password.trim(),
+        fetchOptions: {
+          onResponse: (response) => {
+            console.log("Login response:", response);
+          },
+        },
       });
 
       if (error) {
@@ -153,9 +93,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return { success: false, error: error.message };
       }
 
-      console.log("✅ Login successful, user ID:", data.user?.id);
+      console.log("✅ Login successful:", data);
 
-      // Return success - the onAuthStateChange listener will handle the rest
+      // Wait for session to sync
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      // Redirect
+      router.push("/");
+      router.refresh();
+
       return { success: true };
     } catch (error: any) {
       console.error("❌ Login failed:", error.message);
@@ -173,72 +119,43 @@ export function AppProvider({ children }: { children: ReactNode }) {
     try {
       console.log("📝 Starting registration for:", email);
 
-      // 1. Sign up with Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      const { data, error } = await authClient.signUp.email({
         email: email.trim(),
         password: password.trim(),
-        options: {
-          data: {
-            name: name.trim(),
-          },
-        },
+        name: name.trim(),
       });
 
-      if (authError) {
-        console.error("❌ Supabase auth error:", authError.message);
-        return { success: false, error: authError.message };
+      if (error) {
+        console.error("❌ Registration error:", error.message);
+        return { success: false, error: error.message };
       }
 
-      if (authData.user) {
-        console.log("✅ Auth user created, ID:", authData.user.id);
+      console.log("✅ Registration successful:", data);
 
-        // 2. Create profile in database
-        const { error: profileError } = await supabase.from("profiles").insert({
-          id: authData.user.id,
-          email: email.trim(),
-          name: name.trim(),
-          role: "user",
-          created_at: new Date().toISOString(),
-        });
+      // Auto-login after registration
+      const loginResult = await authClient.signIn.email({
+        email: email.trim(),
+        password: password.trim(),
+      });
 
-        if (profileError) {
-          console.error("❌ Profile creation error:", profileError.message);
-
-          // If profile creation fails, try to delete the auth user
-          try {
-            await supabase.auth.admin.deleteUser(authData.user.id);
-          } catch (deleteError) {
-            console.error("Failed to delete auth user:", deleteError);
-          }
-
-          return {
-            success: false,
-            error: "Failed to create user profile. Please try again.",
-          };
-        }
-
-        console.log("✅ Profile created successfully");
-
-        // 3. Auto-login after registration
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
-          password: password.trim(),
-        });
-
-        if (signInError) {
-          console.error("❌ Auto-login failed:", signInError.message);
-          return {
-            success: false,
-            error:
-              "Registration successful but auto-login failed. Please log in manually.",
-          };
-        }
-
-        console.log("✅ Registration and auto-login completed!");
-        return { success: true };
+      if (loginResult.error) {
+        return {
+          success: false,
+          error:
+            "Registration successful but auto-login failed. Please log in manually.",
+        };
       }
 
-      return { success: false, error: "Registration failed" };
+      console.log("✅ Registration and auto-login completed!");
+
+      // Wait for session to sync
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      // Redirect
+      router.push("/");
+      router.refresh();
+
+      return { success: true };
     } catch (error: any) {
       console.error("❌ Registration failed:", error.message);
       return {
@@ -253,18 +170,38 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signOut();
+      console.log("🚪 Logging out...");
+
+      // Clear local state first
+      setUser(null);
+      setIsLoggedIn(false);
+
+      // Sign out from Better Auth
+      const { error } = await authClient.signOut();
       if (error) throw new Error(error.message);
 
+      console.log("✅ Logout successful");
+
+      // Force complete refresh and redirect
+      router.push("/login");
+      router.refresh();
+    } catch (error: any) {
+      console.error("❌ Logout error:", error.message);
+      // Still clear local state and redirect
       setUser(null);
       setIsLoggedIn(false);
       router.push("/login");
       router.refresh();
-    } catch (error: any) {
       throw new Error(error.message || "Logout failed");
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Keep refreshAuth for compatibility
+  const refreshAuth = async () => {
+    // Just trigger a re-fetch
+    await authClient.getSession();
   };
 
   return (

@@ -107,7 +107,6 @@ export default function CreateActivityModal({
     return Math.round((validCount / fields.length) * 100);
   }, [validation]);
 
-  // Handle form submission
   const handleFormSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
@@ -140,18 +139,22 @@ export default function CreateActivityModal({
         maxApplicants: parseInt(formData.maxApplicants),
       };
 
+      console.log("Submitting activity data:", activityData);
+
       const response = await fetch("/api/activities", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          ...activityData,
-          userId: user.id,
-        }),
+        body: JSON.stringify(activityData),
+        credentials: "include", // IMPORTANT: This sends cookies
       });
 
       const result = await response.json();
+      console.log("Activity creation response:", {
+        status: response.status,
+        result,
+      });
 
       if (!response.ok) {
         throw new Error(result.error || "Failed to create activity");

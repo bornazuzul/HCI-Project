@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   Menu,
@@ -15,6 +16,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useApp } from "@/app/providers";
+import { cn } from "@/lib/utils";
+import { authClient } from "@/lib/auth/auth-client";
 
 interface Page {
   id: string;
@@ -28,7 +31,16 @@ export function Navigation() {
   const [pages, setPages] = useState<Page[]>([]);
   const [loading, setLoading] = useState(true);
   const pathname = usePathname();
-  const { user, isLoggedIn, logout, isLoading: authLoading } = useApp();
+
+  // Get session from Better Auth client
+  const { data: session } = authClient.useSession();
+
+  // Get user from AppProvider for backward compatibility
+  const { user, logout, isLoading: authLoading } = useApp();
+
+  // Use session user if available, otherwise use AppProvider user
+  const currentUser = session?.user || user;
+  const isLoggedIn = !!session?.user || !!user;
 
   // Fetch pages on client side
   useEffect(() => {
@@ -70,7 +82,7 @@ export function Navigation() {
           page.path === "/admin" ||
           page.title.toLowerCase().includes("admin")
         ) {
-          return user?.role === "admin";
+          return currentUser?.role === "admin";
         }
         return true;
       });
@@ -80,45 +92,73 @@ export function Navigation() {
 
   const displayPages = getFilteredPages();
 
+  // Helper function to check if a path is active
+  const isActivePath = (path: string) => {
+    if (path === "/") {
+      return pathname === "/";
+    }
+    return pathname.startsWith(path);
+  };
+
+  // Debug log
+  console.log("Navigation state:", {
+    sessionUser: session?.user,
+    appUser: user,
+    currentUser,
+    isLoggedIn,
+  });
+
   return (
     <nav className="bg-white shadow-sm border-b">
-      <div className="container mx-auto px-4 py-4">
+      <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+            {/* <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-sm">
               <Users className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold text-foreground">VolunMe</span>
+            </div> */}
+            <Image
+              src="/icon.png"
+              alt="VolunMe logo"
+              width={36}
+              height={36}
+              className="rounded-md"
+              priority
+            />
+            <span className="text-xl font-bold text-gray-900 tracking-tight">
+              VolunMe
+            </span>
           </Link>
 
           {/* Desktop Navigation Links - Centered */}
           <div className="hidden md:flex items-center justify-center flex-1">
-            <div className="flex items-center gap-8">
+            <div className="flex items-center gap-1">
               {displayPages.map((page) => (
                 <Link
                   key={page.id}
                   href={page.path}
-                  className={`text-base font-medium transition-colors ${
-                    pathname === page.path
-                      ? "text-primary"
-                      : "text-gray-700 hover:text-primary"
-                  }`}
+                  className={cn(
+                    "px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
+                    isActivePath(page.path)
+                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md"
+                      : "text-gray-600 hover:text-blue-600 hover:bg-gray-50"
+                  )}
                 >
                   {page.title}
                 </Link>
               ))}
 
               {/* Admin link - only show if user is admin */}
-              {user?.role === "admin" &&
+              {currentUser?.role === "admin" &&
                 !displayPages.some((p) => p.path === "/admin") && (
                   <Link
                     href="/admin"
-                    className={`text-base font-medium transition-colors flex items-center gap-2 ${
-                      pathname === "/admin"
-                        ? "text-primary"
-                        : "text-gray-700 hover:text-primary"
-                    }`}
+                    className={cn(
+                      "px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2",
+                      isActivePath("/admin")
+                        ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md"
+                        : "text-gray-600 hover:text-blue-600 hover:bg-gray-50"
+                    )}
                   >
                     <Shield className="w-4 h-4" />
                     Admin
@@ -128,20 +168,22 @@ export function Navigation() {
           </div>
 
           {/* Desktop Auth Links - Right aligned */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-3">
             {isLoggedIn ? (
               <>
-                <div className="flex items-center gap-2">
-                  <User className="w-4 h-4 text-gray-600" />
-                  <span className="text-base text-gray-700 font-medium">
-                    {user?.name || "User"}
+                <div className="flex items-center gap-2.5 bg-gray-50 rounded-lg px-3.5 py-2.5">
+                  <div className="w-7 h-7 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center">
+                    <User className="w-3.5 h-3.5 text-blue-600" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-800">
+                    {currentUser?.name || "User"}
                   </span>
                 </div>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleLogout}
-                  className="gap-2 text-base"
+                  className="gap-1.5 text-sm font-medium border-gray-300 hover:border-red-300 hover:bg-red-50 hover:text-red-600 px-3.5 py-2.5 rounded-lg"
                 >
                   <LogOut className="w-4 h-4" />
                   Logout
@@ -150,12 +192,19 @@ export function Navigation() {
             ) : (
               <>
                 <Link href="/login">
-                  <Button variant="ghost" size="sm" className="text-base">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-sm font-medium text-gray-600 hover:text-blue-600 px-3.5 py-2.5 rounded-lg"
+                  >
                     Login
                   </Button>
                 </Link>
                 <Link href="/register">
-                  <Button size="sm" className="text-base">
+                  <Button
+                    size="sm"
+                    className="text-sm font-medium bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 px-3.5 py-2.5 rounded-lg shadow-sm hover:shadow"
+                  >
                     Sign Up
                   </Button>
                 </Link>
@@ -165,32 +214,33 @@ export function Navigation() {
 
           {/* Mobile menu button */}
           <button
-            className="md:hidden p-2"
+            className="md:hidden p-2 rounded-md hover:bg-gray-100 transition-colors"
             onClick={() => setIsOpen(!isOpen)}
             aria-label="Toggle menu"
           >
             {isOpen ? (
-              <X className="w-6 h-6 text-foreground" />
+              <X className="w-6 h-6 text-gray-700" />
             ) : (
-              <Menu className="w-6 h-6 text-foreground" />
+              <Menu className="w-6 h-6 text-gray-700" />
             )}
           </button>
         </div>
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="md:hidden mt-4 pb-4 border-t border-gray-200 pt-4">
-            <div className="flex flex-col gap-3">
+          <div className="md:hidden mt-3 pb-3 border-t border-gray-200 pt-3">
+            <div className="flex flex-col gap-2">
               {/* Navigation Links */}
               {displayPages.map((page) => (
                 <Link
                   key={page.id}
                   href={page.path}
-                  className={`px-4 py-3 rounded-lg text-base font-medium text-center ${
-                    pathname === page.path
-                      ? "bg-primary/10 text-primary"
-                      : "text-gray-700 hover:bg-gray-100"
-                  }`}
+                  className={cn(
+                    "px-4 py-3 rounded-lg text-sm font-medium transition-all",
+                    isActivePath(page.path)
+                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md"
+                      : "text-gray-600 hover:bg-gray-100"
+                  )}
                   onClick={() => setIsOpen(false)}
                 >
                   {page.title}
@@ -198,15 +248,16 @@ export function Navigation() {
               ))}
 
               {/* Admin link for mobile */}
-              {user?.role === "admin" &&
+              {currentUser?.role === "admin" &&
                 !displayPages.some((p) => p.path === "/admin") && (
                   <Link
                     href="/admin"
-                    className={`px-4 py-3 rounded-lg text-base font-medium flex items-center justify-center gap-2 ${
-                      pathname === "/admin"
-                        ? "bg-primary/10 text-primary"
-                        : "text-gray-700 hover:bg-gray-100"
-                    }`}
+                    className={cn(
+                      "px-4 py-3 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-all",
+                      isActivePath("/admin")
+                        ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md"
+                        : "text-gray-600 hover:bg-gray-100"
+                    )}
                     onClick={() => setIsOpen(false)}
                   >
                     <Shield className="w-4 h-4" />
@@ -215,27 +266,27 @@ export function Navigation() {
                 )}
 
               {/* Auth Links - Mobile */}
-              <div className="border-t border-gray-200 pt-4 mt-2">
+              <div className="border-t border-gray-200 pt-3 mt-2">
                 {isLoggedIn ? (
                   <>
-                    <div className="flex items-center justify-center gap-2 px-4 py-3">
-                      <User className="w-5 h-5 text-gray-600" />
-                      <span className="text-base font-medium text-gray-700">
-                        {user?.name || "User"}
-                      </span>
+                    <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-lg">
+                      <div className="w-9 h-9 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center">
+                        <User className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-800 block">
+                          {currentUser?.name || "User"}
+                        </span>
+                        <span className="text-xs text-gray-600">
+                          {currentUser?.email}
+                        </span>
+                      </div>
                     </div>
-                    <Link
-                      href="/profile"
-                      className="block px-4 py-3 rounded-lg text-base font-medium text-center text-gray-700 hover:bg-gray-100"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      Profile
-                    </Link>
                     <button
                       onClick={handleLogout}
-                      className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-lg text-base font-medium text-gray-700 hover:bg-gray-100"
+                      className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-lg text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-600 border border-gray-200 hover:border-red-200 transition-all mt-2"
                     >
-                      <LogOut className="w-5 h-5" />
+                      <LogOut className="w-4 h-4" />
                       Logout
                     </button>
                   </>
@@ -243,14 +294,14 @@ export function Navigation() {
                   <>
                     <Link
                       href="/login"
-                      className="block px-4 py-3 rounded-lg text-base font-medium text-center text-gray-700 hover:bg-gray-100"
+                      className="block px-4 py-3 rounded-lg text-sm font-medium text-center text-gray-600 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 transition-all"
                       onClick={() => setIsOpen(false)}
                     >
                       Login
                     </Link>
                     <Link
                       href="/register"
-                      className="block px-4 py-3 rounded-lg bg-primary text-white text-base font-medium text-center hover:bg-primary/90"
+                      className="block px-4 py-3 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-medium text-center hover:from-blue-700 hover:to-indigo-700 shadow-sm hover:shadow transition-all mt-2"
                       onClick={() => setIsOpen(false)}
                     >
                       Sign Up
