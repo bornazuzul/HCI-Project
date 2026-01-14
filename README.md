@@ -22,5 +22,6 @@
 - Link to Assignment 3: [**Assignment 3**](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/3_assignment)
 - Link to Assignment 4: [**Assignment 4**](https://www.figma.com/design/Qot47ee38Ki6eJymclxHXn/VolunMe-Full-design?node-id=0-1&p=f&t=odmWsxBxiPrM3Y1b-0)
 - Link to Assignment 5: [**Assignment 5**](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/5_assigment.md)
+- Link to Assignment 6: [**Assignment 6**](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/6_assigment.md)
 
 Live at: https://hci-project-rho.vercel.app/
