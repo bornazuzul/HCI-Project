@@ -1,6 +1,6 @@
 # Project Review
 
-**Date:** 15. siječnja 2026.  
+**Date:** 15.1.2026.  
 **Review Type:** Live review with professor
 
 ## Progress
