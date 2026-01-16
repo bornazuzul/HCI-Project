@@ -14,6 +14,8 @@
 ## My Project Links
 
 ### Semester Project
+- Link to production version: [Production Version](https://hci-project-rho.vercel.app/)
+- Link to final report: [Final Report](#)
 
 ### Semester Assignments
 
