@@ -100,78 +100,114 @@ export function Navigation() {
     return pathname.startsWith(path);
   };
 
-  // Debug log
-  console.log("Navigation state:", {
-    sessionUser: session?.user,
-    appUser: user,
-    currentUser,
-    isLoggedIn,
-  });
+  // Get active gradient color for text (using the same gradient as before but for text)
+  const getActiveTextStyle = (isActive: boolean) => {
+    return isActive
+      ? "text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 font-semibold"
+      : "";
+  };
 
   return (
-    <nav className="bg-white shadow-sm border-b">
-      <div className="container mx-auto px-4 py-3">
+    <nav className="bg-white shadow-sm border-b sticky top-0 z-50">
+      <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
-            {/* <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-sm">
-              <Users className="w-5 h-5 text-white" />
-            </div> */}
-            <Image
-              src="/icon.png"
-              alt="VolunMe logo"
-              width={36}
-              height={36}
-              className="rounded-md"
-              priority
-            />
-            <span className="text-xl font-bold text-gray-900 tracking-tight">
-              VolunMe
-            </span>
+          <Link
+            href="/"
+            className="flex items-center gap-3 group"
+            onClick={() => setIsOpen(false)}
+          >
+            <div className="relative w-10 h-10">
+              <Image
+                src="/icon.png"
+                alt="VolunMe logo"
+                fill
+                className="object-contain rounded-md transition-transform duration-300 group-hover:scale-105"
+                sizes="40px"
+                priority
+              />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent tracking-tight">
+                VolunMe
+              </span>
+            </div>
           </Link>
 
           {/* Desktop Navigation Links - Centered */}
           <div className="hidden md:flex items-center justify-center flex-1">
-            <div className="flex items-center gap-1">
-              {displayPages.map((page) => (
-                <Link
-                  key={page.id}
-                  href={page.path}
-                  className={cn(
-                    "px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
-                    isActivePath(page.path)
-                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md"
-                      : "text-gray-600 hover:text-blue-600 hover:bg-gray-50"
-                  )}
-                >
-                  {page.title}
-                </Link>
-              ))}
+            <div className="flex items-center gap-6">
+              {displayPages.map((page) => {
+                const isActive = isActivePath(page.path);
+                return (
+                  <Link
+                    key={page.id}
+                    href={page.path}
+                    className="group relative"
+                  >
+                    <span
+                      className={cn(
+                        "text-sm font-medium transition-all duration-300",
+                        isActive
+                          ? cn(
+                              "text-[1.05em] font-semibold",
+                              getActiveTextStyle(isActive),
+                            )
+                          : "text-gray-600 group-hover:text-gray-900",
+                      )}
+                    >
+                      {page.title}
+                    </span>
+
+                    {/* Underline indicator */}
+                    <span
+                      className={cn(
+                        "absolute -bottom-1 left-0 h-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 transition-all duration-300",
+                        isActive
+                          ? "w-full opacity-100"
+                          : "w-0 opacity-0 group-hover:w-full group-hover:opacity-100",
+                      )}
+                    />
+                  </Link>
+                );
+              })}
 
               {/* Admin link - only show if user is admin */}
               {currentUser?.role === "admin" &&
                 !displayPages.some((p) => p.path === "/admin") && (
-                  <Link
-                    href="/admin"
-                    className={cn(
-                      "px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2",
-                      isActivePath("/admin")
-                        ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md"
-                        : "text-gray-600 hover:text-blue-600 hover:bg-gray-50"
-                    )}
-                  >
-                    <Shield className="w-4 h-4" />
-                    Admin
+                  <Link href="/admin" className="group relative">
+                    <span
+                      className={cn(
+                        "text-sm font-medium transition-all duration-300 flex items-center gap-2",
+                        isActivePath("/admin")
+                          ? cn(
+                              "text-[1.05em] font-semibold",
+                              getActiveTextStyle(true),
+                            )
+                          : "text-gray-600 group-hover:text-gray-900",
+                      )}
+                    >
+                      <Shield className="w-4 h-4" />
+                      Admin
+                    </span>
+                    <span
+                      className={cn(
+                        "absolute -bottom-1 left-0 h-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 transition-all duration-300",
+                        isActivePath("/admin")
+                          ? "w-full opacity-100"
+                          : "w-0 opacity-0 group-hover:w-full group-hover:opacity-100",
+                      )}
+                    />
                   </Link>
                 )}
             </div>
           </div>
 
           {/* Desktop Auth Links - Right aligned */}
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-4">
             {isLoggedIn ? (
               <>
-                <div className="flex items-center gap-2.5 bg-gray-50 rounded-lg px-3.5 py-2.5">
+                <div className="flex items-center gap-2.5">
                   <div className="w-7 h-7 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center">
                     <User className="w-3.5 h-3.5 text-blue-600" />
                   </div>
@@ -195,15 +231,17 @@ export function Navigation() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-sm font-medium text-gray-600 hover:text-blue-600 px-3.5 py-2.5 rounded-lg"
+                    className="text-sm font-medium text-gray-600 hover:text-white hover:bg-gradient-to-r hover:from-blue-600 hover:to-indigo-600 px-3.5 py-2.5 rounded-lg transition-all duration-300 group"
                   >
-                    Login
+                    <span className="transition-colors duration-300 group-hover:text-white">
+                      Login
+                    </span>
                   </Button>
                 </Link>
                 <Link href="/register">
                   <Button
                     size="sm"
-                    className="text-sm font-medium bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 px-3.5 py-2.5 rounded-lg shadow-sm hover:shadow"
+                    className="text-sm font-medium bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-3.5 py-2.5 rounded-lg shadow-sm hover:shadow hover:shadow-blue-500/25 transition-all duration-300"
                   >
                     Sign Up
                   </Button>
@@ -214,7 +252,7 @@ export function Navigation() {
 
           {/* Mobile menu button */}
           <button
-            className="md:hidden p-2 rounded-md hover:bg-gray-100 transition-colors"
+            className="md:hidden p-2.5 rounded-lg hover:bg-gray-100 transition-all duration-300 active:scale-95"
             onClick={() => setIsOpen(!isOpen)}
             aria-label="Toggle menu"
           >
@@ -228,24 +266,44 @@ export function Navigation() {
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="md:hidden mt-3 pb-3 border-t border-gray-200 pt-3">
-            <div className="flex flex-col gap-2">
+          <div className="md:hidden mt-4 pb-4 border-t border-gray-200 pt-4 animate-in slide-in-from-top duration-300">
+            <div className="flex flex-col gap-3">
               {/* Navigation Links */}
-              {displayPages.map((page) => (
-                <Link
-                  key={page.id}
-                  href={page.path}
-                  className={cn(
-                    "px-4 py-3 rounded-lg text-sm font-medium transition-all",
-                    isActivePath(page.path)
-                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md"
-                      : "text-gray-600 hover:bg-gray-100"
-                  )}
-                  onClick={() => setIsOpen(false)}
-                >
-                  {page.title}
-                </Link>
-              ))}
+              {displayPages.map((page) => {
+                const isActive = isActivePath(page.path);
+                return (
+                  <Link
+                    key={page.id}
+                    href={page.path}
+                    className={cn(
+                      "px-4 py-3.5 rounded-lg text-sm font-medium transition-all duration-300 relative group",
+                      isActive
+                        ? "bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100"
+                        : "text-gray-600 hover:bg-gray-50",
+                    )}
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <span
+                      className={cn(
+                        "transition-all duration-300",
+                        isActive
+                          ? cn(
+                              "text-[1.05em] font-semibold",
+                              getActiveTextStyle(isActive),
+                            )
+                          : "group-hover:text-gray-900",
+                      )}
+                    >
+                      {page.title}
+                    </span>
+
+                    {/* Mobile underline indicator */}
+                    {isActive && (
+                      <span className="absolute left-4 right-4 -bottom-0.5 h-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full" />
+                    )}
+                  </Link>
+                );
+              })}
 
               {/* Admin link for mobile */}
               {currentUser?.role === "admin" &&
@@ -253,20 +311,35 @@ export function Navigation() {
                   <Link
                     href="/admin"
                     className={cn(
-                      "px-4 py-3 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-all",
+                      "px-4 py-3.5 rounded-lg text-sm font-medium flex items-center justify-center gap-2.5 transition-all duration-300 relative group",
                       isActivePath("/admin")
-                        ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md"
-                        : "text-gray-600 hover:bg-gray-100"
+                        ? "bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100"
+                        : "text-gray-600 hover:bg-gray-50",
                     )}
                     onClick={() => setIsOpen(false)}
                   >
                     <Shield className="w-4 h-4" />
-                    Admin
+                    <span
+                      className={cn(
+                        "transition-all duration-300",
+                        isActivePath("/admin")
+                          ? cn(
+                              "text-[1.05em] font-semibold",
+                              getActiveTextStyle(true),
+                            )
+                          : "group-hover:text-gray-900",
+                      )}
+                    >
+                      Admin
+                    </span>
+                    {isActivePath("/admin") && (
+                      <span className="absolute left-4 right-4 -bottom-0.5 h-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full" />
+                    )}
                   </Link>
                 )}
 
               {/* Auth Links - Mobile */}
-              <div className="border-t border-gray-200 pt-3 mt-2">
+              <div className="border-t border-gray-200 pt-4 mt-2">
                 {isLoggedIn ? (
                   <>
                     <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-lg">
@@ -277,16 +350,13 @@ export function Navigation() {
                         <span className="text-sm font-medium text-gray-800 block">
                           {currentUser?.name || "User"}
                         </span>
-                        <span className="text-xs text-gray-600">
-                          {currentUser?.email}
-                        </span>
                       </div>
                     </div>
                     <button
                       onClick={handleLogout}
-                      className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-lg text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-600 border border-gray-200 hover:border-red-200 transition-all mt-2"
+                      className="flex items-center justify-center gap-2 w-full px-4 py-3.5 rounded-lg text-sm font-medium text-gray-600 hover:text-red-600 hover:bg-red-50 border border-gray-200 hover:border-red-200 transition-all duration-300 mt-2 group"
                     >
-                      <LogOut className="w-4 h-4" />
+                      <LogOut className="w-4 h-4 transition-transform duration-300 group-hover:rotate-12" />
                       Logout
                     </button>
                   </>
@@ -294,14 +364,16 @@ export function Navigation() {
                   <>
                     <Link
                       href="/login"
-                      className="block px-4 py-3 rounded-lg text-sm font-medium text-center text-gray-600 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 transition-all"
+                      className="flex items-center justify-center px-4 py-3.5 rounded-lg text-sm font-medium text-gray-600 hover:text-white hover:bg-gradient-to-r hover:from-blue-600 hover:to-indigo-600 border border-gray-200 hover:border-transparent transition-all duration-300 group mb-3"
                       onClick={() => setIsOpen(false)}
                     >
-                      Login
+                      <span className="transition-colors duration-300 group-hover:text-white">
+                        Login
+                      </span>
                     </Link>
                     <Link
                       href="/register"
-                      className="block px-4 py-3 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-medium text-center hover:from-blue-700 hover:to-indigo-700 shadow-sm hover:shadow transition-all mt-2"
+                      className="flex items-center justify-center px-4 py-3.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-medium hover:from-blue-700 hover:to-indigo-700 shadow-sm hover:shadow hover:shadow-blue-500/25 transition-all duration-300 active:scale-[0.98]"
                       onClick={() => setIsOpen(false)}
                     >
                       Sign Up

@@ -91,7 +91,7 @@ export default function ActivityFilters({
             className={cn(
               "w-full justify-start gap-2",
               showMyActivities &&
-                "bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
+                "bg-gradient-to-r from-blue-600 to-indigo-600 text-white",
             )}
           >
             <User className="w-4 h-4" />
@@ -103,8 +103,10 @@ export default function ActivityFilters({
       {/* Date Filter */}
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-3">
-          <Calendar className="w-4 h-4 text-gray-500" />
-          <label className="text-sm font-medium text-gray-700">Date</label>
+          <Calendar className="w-5 h-5 text-gray-800 font-semibold" />{" "}
+          <label className="text-base font-semibold text-gray-800">
+            Date
+          </label>{" "}
         </div>
         <div className="space-y-2">
           {dateOptions.map((option) => (
@@ -121,7 +123,7 @@ export default function ActivityFilters({
                 "w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
                 dateFilter === option.value
                   ? "bg-blue-50 text-blue-700 border border-blue-200"
-                  : "text-gray-600 hover:bg-gray-50 border border-transparent"
+                  : "text-gray-600 hover:bg-gray-50 border border-transparent",
               )}
             >
               <div className="flex items-center justify-between">
@@ -138,8 +140,10 @@ export default function ActivityFilters({
       {/* Categories */}
       <div className="space-y-2">
         <div className="flex items-center gap-2 mb-3">
-          <Filter className="w-4 h-4 text-gray-500" />
-          <label className="text-sm font-medium text-gray-700">Category</label>
+          <Filter className="w-5 h-5 text-gray-800 font-semibold" />
+          <label className="text-base font-semibold text-gray-800">
+            Category
+          </label>{" "}
         </div>
         <button
           onClick={() => updateParams((p) => p.delete("category"))}
@@ -147,7 +151,7 @@ export default function ActivityFilters({
             "w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
             currentCategory === "all"
               ? "bg-blue-50 text-blue-700 border border-blue-200"
-              : "text-gray-600 hover:bg-gray-50 border border-transparent"
+              : "text-gray-600 hover:bg-gray-50 border border-transparent",
           )}
         >
           <div className="flex items-center justify-between">
@@ -166,7 +170,7 @@ export default function ActivityFilters({
               "w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
               currentCategory === category
                 ? "bg-blue-50 text-blue-700 border border-blue-200"
-                : "text-gray-600 hover:bg-gray-50 border border-transparent"
+                : "text-gray-600 hover:bg-gray-50 border border-transparent",
             )}
           >
             <div className="flex items-center justify-between">

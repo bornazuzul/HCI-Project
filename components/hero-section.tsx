@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 interface HeroSectionProps {
-  isLoggedIn: boolean
+  isLoggedIn: boolean;
 }
 
 export default function HeroSection({ isLoggedIn }: HeroSectionProps) {
@@ -17,8 +17,8 @@ export default function HeroSection({ isLoggedIn }: HeroSectionProps) {
         </h1>
 
         <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto text-balance">
-          Connect with meaningful volunteer opportunities in your community. Help others, build friendships, and make a
-          real difference.
+          Connect with meaningful volunteer opportunities in your community.
+          Help others, build friendships, and make a real difference.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
@@ -29,7 +29,9 @@ export default function HeroSection({ isLoggedIn }: HeroSectionProps) {
           ) : (
             <>
               <Link href="/register">
-                <Button size="lg">Get Started</Button>
+                <Button size="lg" variant="outline">
+                  Get Started
+                </Button>
               </Link>
               <Link href="/login">
                 <Button size="lg" variant="outline">
@@ -41,5 +43,5 @@ export default function HeroSection({ isLoggedIn }: HeroSectionProps) {
         </div>
       </div>
     </section>
-  )
+  );
 }

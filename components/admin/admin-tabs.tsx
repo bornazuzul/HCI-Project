@@ -12,7 +12,7 @@ export default function AdminTabs({ activeTab, setActiveTab }: AdminTabsProps) {
   const tabs = [
     { id: "activities", label: "Activities", icon: "📋" },
     // { id: "notifications", label: "Notifications", icon: "🔔" },
-    { id: "users", label: "Users", icon: "👥" },
+    // { id: "users", label: "Users", icon: "👥" },
   ];
 
   return (

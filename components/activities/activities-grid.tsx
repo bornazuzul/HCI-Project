@@ -91,7 +91,7 @@ export default function ActivitiesGrid({
     if (!filters.my) {
       filtered = filtered.filter(
         (activity) =>
-          activity.status === "approved" || activity.status === undefined
+          activity.status === "approved" || activity.status === undefined,
       );
     }
 
@@ -103,7 +103,7 @@ export default function ActivitiesGrid({
           activity.title.toLowerCase().includes(term) ||
           activity.description.toLowerCase().includes(term) ||
           activity.location.toLowerCase().includes(term) ||
-          activity.organizerName.toLowerCase().includes(term)
+          activity.organizerName.toLowerCase().includes(term),
       );
     }
 
@@ -173,10 +173,10 @@ export default function ActivitiesGrid({
           {filters.my
             ? "You haven't created any activities yet. Create your first activity to get started!"
             : dateFilter !== "all"
-            ? `No activities found for "${getDateFilterLabel(
-                dateFilter
-              )}". Try a different date filter.`
-            : "Try adjusting your filters or check back later for new opportunities."}
+              ? `No activities found for "${getDateFilterLabel(
+                  dateFilter,
+                )}". Try a different date filter.`
+              : "Try adjusting your filters or check back later for new opportunities."}
         </p>
         {filters.my ? (
           <Link
@@ -388,7 +388,7 @@ export default function ActivitiesGrid({
           today.setHours(0, 0, 0, 0);
           const isPastActivity = activityDate < today;
           const daysUntil = Math.ceil(
-            (activityDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+            (activityDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
           );
 
           const formattedDate = activityDate.toLocaleDateString("en-US", {
@@ -408,27 +408,28 @@ export default function ActivitiesGrid({
               key={activity.id}
               href={`/activities/${activity.id}`}
               className={`
-                group block bg-white rounded-2xl p-6 hover:shadow-xl transition-all duration-300
-                border-2
-                ${
-                  activity.status === "pending"
-                    ? "border-yellow-400"
-                    : activity.status === "rejected"
-                    ? "border-red-400"
-                    : activity.status === "approved"
-                    ? ""
-                    : "border-gray-200"
-                }
-                hover:border-blue-300
-                overflow-hidden relative
-              `}
+          group block bg-white rounded-2xl p-6 hover:shadow-xl transition-all duration-300
+          border-2
+          ${
+            activity.status === "pending"
+              ? "border-yellow-400"
+              : activity.status === "rejected"
+                ? "border-red-400"
+                : activity.status === "approved"
+                  ? ""
+                  : "border-gray-200"
+          }
+          hover:border-blue-300
+          overflow-hidden relative
+          flex flex-col h-full /* FIX: Added for footer positioning */
+        `}
             >
               {/* Card Header */}
               <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-2">
                   <span
                     className={`px-3 py-1.5 text-xs font-semibold rounded-full border ${getCategoryColor(
-                      activity.category
+                      activity.category,
                     )}`}
                   >
                     {activity.category}
@@ -441,15 +442,15 @@ export default function ActivitiesGrid({
                         daysUntil === 0
                           ? "bg-red-100 text-red-800"
                           : daysUntil === 1
-                          ? "bg-orange-100 text-orange-800"
-                          : "bg-blue-100 text-blue-800"
+                            ? "bg-orange-100 text-orange-800"
+                            : "bg-blue-100 text-blue-800"
                       }`}
                     >
                       {daysUntil === 0
                         ? "Today"
                         : daysUntil === 1
-                        ? "Tomorrow"
-                        : `${daysUntil}d`}
+                          ? "Tomorrow"
+                          : `${daysUntil}d`}
                     </span>
                   )}
                 </div>
@@ -462,8 +463,8 @@ export default function ActivitiesGrid({
                 </div>
               </div>
 
-              {/* Card Body */}
-              <div className="mb-5">
+              {/* Card Body - FIX: Added flex-1 to grow and push footer down */}
+              <div className="mb-5 flex-1">
                 <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors line-clamp-2">
                   {activity.title}
                 </h3>
@@ -494,7 +495,7 @@ export default function ActivitiesGrid({
                           100,
                           (activity.currentApplicants /
                             activity.maxApplicants) *
-                            100
+                            100,
                         )}%`,
                       }}
                     ></div>
@@ -503,43 +504,44 @@ export default function ActivitiesGrid({
               </div>
 
               {/* Card Footer */}
-              <div className="flex items-center justify-between pt-4 border-t border-gray-100 gap-4">
-                <div className="flex items-center text-gray-600 min-w-0">
-                  <svg
-                    className="w-5 h-5 mr-2 text-gray-400 shrink-0"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                  </svg>
-
-                  <span
-                    className="text-sm font-medium truncate"
-                    title={activity.location}
-                  >
-                    {activity.location}
-                  </span>
-                </div>
-                {showOrganizerInfo && (
-                  <div className="flex items-center text-gray-600 shrink-0">
-                    <User className="w-4 h-4 mr-1 text-gray-400" />
-                    <span className="text-sm truncate max-w-[120px]">
-                      {activity.organizerName}
+              <div className="pt-4 border-t border-gray-200">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  {/* Location - with proper line breaking */}
+                  <div className="flex items-start text-gray-700 w-full sm:w-auto min-w-0">
+                    <svg
+                      className="w-5 h-5 font-semibold text-gray-500 shrink-0 mt-0.5 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                    </svg>
+                    <span className="text-sm font-semibold text-gray-800 break-words min-w-0">
+                      {activity.location}
                     </span>
                   </div>
-                )}
+
+                  {/* Organizer Info */}
+                  {showOrganizerInfo && (
+                    <div className="flex items-center text-gray-700 shrink-0 bg-gray-50 px-3 py-1.5 rounded-lg">
+                      <User className="w-4 h-4 text-gray-500 mr-1.5" />
+                      <span className="text-sm font-medium text-gray-800 truncate max-w-[140px] sm:max-w-[160px]">
+                        {activity.organizerName}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Status indicator */}
@@ -587,8 +589,8 @@ export default function ActivitiesGrid({
             {searchTerm
               ? `We couldn't find any activities matching "${searchTerm}".`
               : dateFilter !== "all"
-              ? `No activities found for "${getDateFilterLabel(dateFilter)}".`
-              : "Try adjusting your filters or check back later for new opportunities."}
+                ? `No activities found for "${getDateFilterLabel(dateFilter)}".`
+                : "Try adjusting your filters or check back later for new opportunities."}
           </p>
           <button
             onClick={() => router.push("/activities")}
