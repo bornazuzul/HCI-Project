@@ -472,7 +472,10 @@ export default function ActivitiesGrid({
                 <p className="text-gray-600 mb-4 line-clamp-3">
                   {activity.description}
                 </p>
+              </div>
 
+              {/* Card Footer */}
+              <div className="pt-4">
                 {/* Capacity Indicator */}
                 <div className="mb-3">
                   <div className="flex justify-between text-xs text-gray-600 mb-1">
@@ -501,11 +504,7 @@ export default function ActivitiesGrid({
                     ></div>
                   </div>
                 </div>
-              </div>
-
-              {/* Card Footer */}
-              <div className="pt-4 border-t border-gray-200">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="pt-4 flex flex-col sm:flex-row border-t border-gray-200 items-start sm:items-center justify-between gap-3">
                   {/* Location - with proper line breaking */}
                   <div className="flex items-start text-gray-700 w-full sm:w-auto min-w-0">
                     <svg
