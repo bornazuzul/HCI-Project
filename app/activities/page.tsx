@@ -33,11 +33,11 @@ async function getCurrentUser() {
         headers: headers,
         credentials: "include",
         cache: "no-store",
-      }
+      },
     );
 
     if (!response.ok) {
-      console.log("No Better Auth session found - API error:", response.status);
+      // console.log("No Better Auth session found - API error:", response.status);
       return null;
     }
 
@@ -49,8 +49,8 @@ async function getCurrentUser() {
     }
 
     const sessionUser = result.session.user;
-    console.log("Better Auth user ID:", sessionUser.id);
-    console.log("Better Auth user:", sessionUser);
+    // console.log("Better Auth user ID:", sessionUser.id);
+    // console.log("Better Auth user:", sessionUser);
 
     return {
       id: sessionUser.id,
@@ -67,7 +67,7 @@ async function getCurrentUser() {
 // Helper function to determine ID type
 function isUUID(id: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-    id
+    id,
   );
 }
 
@@ -157,21 +157,20 @@ export default async function ActivitiesPage({
   searchParams,
 }: ActivitiesPageSearchParams) {
   // Load search params
-  const { page, category, my, date } = await loadActivitiesSearchParams(
-    searchParams
-  );
+  const { page, category, my, date } =
+    await loadActivitiesSearchParams(searchParams);
 
   // Get current user
   const user = await getCurrentUser();
   const userId = user?.id;
 
-  console.log("=== ACTIVITIES PAGE DEBUG ===");
-  console.log("User ID:", userId);
-  console.log("User:", user);
-  console.log("Category filter:", category);
-  console.log("My filter:", my);
-  console.log("Date filter:", date);
-  console.log("Show my activities:", my === "true" && !!userId);
+  // console.log("=== ACTIVITIES PAGE DEBUG ===");
+  // console.log("User ID:", userId);
+  // console.log("User:", user);
+  // console.log("Category filter:", category);
+  // console.log("My filter:", my);
+  // console.log("Date filter:", date);
+  // console.log("Show my activities:", my === "true" && !!userId);
 
   // Validate inputs
   const validatedPage = Math.max(1, page);
@@ -180,12 +179,12 @@ export default async function ActivitiesPage({
   const dateFilter = date || "all";
   const offset = (validatedPage - 1) * PAGE_SIZE;
 
-  console.log("Building query with filters:");
-  console.log("- Status: approved");
-  console.log("- Show my activities:", showMyActivities);
-  console.log("- User ID for filter:", userId);
-  console.log("- Category filter:", categoryFilter);
-  console.log("- Date filter:", dateFilter);
+  // console.log("Building query with filters:");
+  // console.log("- Status: approved");
+  // console.log("- Show my activities:", showMyActivities);
+  // console.log("- User ID for filter:", userId);
+  // console.log("- Category filter:", categoryFilter);
+  // console.log("- Date filter:", dateFilter);
 
   let activitiesData: any[] = [];
   let total = 0;
@@ -194,12 +193,11 @@ export default async function ActivitiesPage({
   const dateRange = getDateRangeCondition(dateFilter);
   const dateFilterActive = dateFilter && dateFilter !== "all";
 
-  console.log("Date range condition:", dateRange);
-
+  // console.log("Date range condition:", dateRange);
   if (showMyActivities && userId) {
-    console.log("Applying 'My Activities' filter with user ID:", userId);
-    console.log("User ID type:", typeof userId);
-    console.log("Is UUID:", isUUID(userId));
+    // console.log("Applying 'My Activities' filter with user ID:", userId);
+    // console.log("User ID type:", typeof userId);
+    // console.log("Is UUID:", isUUID(userId));
 
     let myActivitiesConditions = [eq(activities.status, "approved")];
 
@@ -209,8 +207,8 @@ export default async function ActivitiesPage({
         myActivitiesConditions.push(
           and(
             gte(activities.date, dateRange.startDate),
-            lte(activities.date, dateRange.endDate)
-          )
+            lte(activities.date, dateRange.endDate),
+          ),
         );
       } else if (dateRange.startDate) {
         myActivitiesConditions.push(gte(activities.date, dateRange.startDate));
@@ -275,8 +273,8 @@ export default async function ActivitiesPage({
         conditions.push(
           and(
             gte(activities.date, dateRange.startDate),
-            lte(activities.date, dateRange.endDate)
-          )
+            lte(activities.date, dateRange.endDate),
+          ),
         );
       } else if (dateRange.startDate) {
         conditions.push(gte(activities.date, dateRange.startDate));
@@ -285,7 +283,7 @@ export default async function ActivitiesPage({
       }
     }
 
-    console.log("SQL conditions:", conditions);
+    // console.log("SQL conditions:", conditions);
 
     const query = db
       .select({
@@ -323,24 +321,24 @@ export default async function ActivitiesPage({
     total = Number(countResult[0]?.count) || 0;
   }
 
-  console.log("Fetched activities count:", activitiesData.length);
-  console.log(
-    "Activities data:",
-    activitiesData.map((a: any) => ({
-      id: a.id,
-      title: a.title,
-      date: a.date,
-      status: a.status,
-      organizerId: a.organizerId,
-      betterAuthOrganizerId: a.betterAuthOrganizerId,
-      organizerName: a.organizerName,
-    }))
-  );
+  // console.log("Fetched activities count:", activitiesData.length);
+  // console.log(
+  //   "Activities data:",
+  //   activitiesData.map((a: any) => ({
+  //     id: a.id,
+  //     title: a.title,
+  //     date: a.date,
+  //     status: a.status,
+  //     organizerId: a.organizerId,
+  //     betterAuthOrganizerId: a.betterAuthOrganizerId,
+  //     organizerName: a.organizerName,
+  //   }))
+  // );
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
-  console.log("Total activities:", total);
-  console.log("Total pages:", totalPages);
+  // console.log("Total activities:", total);
+  // console.log("Total pages:", totalPages);
 
   // Handle page out of bounds
   if (validatedPage > totalPages && totalPages > 0) {

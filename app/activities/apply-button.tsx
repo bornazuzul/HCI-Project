@@ -26,7 +26,7 @@ export default function ApplyButton({
   const [isLoading, setIsLoading] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
   const [availableSpots, setAvailableSpots] = useState(
-    maxApplicants - currentApplicants
+    maxApplicants - currentApplicants,
   );
   const [applicantCount, setApplicantCount] = useState(currentApplicants);
 
@@ -46,18 +46,18 @@ export default function ApplyButton({
   const checkApplicationStatus = async () => {
     try {
       const response = await fetch(
-        `/api/applications?activityId=${activityId}`
+        `/api/applications?activityId=${activityId}`,
       );
       if (response.ok) {
         const data = await response.json();
-        console.log("Application status response:", data);
+        // console.log("Application status response:", data);
         if (data.success && data.data) {
           // Check if current user has applied
           const userApplication = data.data.find((app: any) => {
-            console.log("Comparing:", app.userId, "with", user?.id);
+            // console.log("Comparing:", app.userId, "with", user?.id);
             return app.userId === user?.id;
           });
-          console.log("User has applied?", !!userApplication);
+          // console.log("User has applied?", !!userApplication);
           setHasApplied(!!userApplication);
         }
       }
@@ -154,7 +154,7 @@ export default function ApplyButton({
       // alert("Application withdrawn successfully!");
     } catch (error: any) {
       alert(
-        error.message || "Failed to withdraw application. Please try again."
+        error.message || "Failed to withdraw application. Please try again.",
       );
       // Refresh status on error
       await checkApplicationStatus();
@@ -211,7 +211,7 @@ export default function ApplyButton({
         variant="outline"
         className={cn(
           "w-full border-red-300 text-red-700 hover:bg-red-50 hover:text-red-800",
-          isLoading && "opacity-50"
+          isLoading && "opacity-50",
         )}
       >
         {isLoading ? "Withdrawing..." : "Applied - click to unapply"}
@@ -225,7 +225,7 @@ export default function ApplyButton({
       disabled={isLoading}
       className={cn(
         "w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700",
-        isLoading && "opacity-50"
+        isLoading && "opacity-50",
       )}
     >
       {isLoading ? "Applying..." : "Apply to Volunteer"}

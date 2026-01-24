@@ -5,12 +5,12 @@ import { eq } from "drizzle-orm";
 
 async function migrateUsers() {
   try {
-    console.log("Starting user migration from profiles to Better Auth...");
+    // console.log("Starting user migration from profiles to Better Auth...");
 
     // Get all profiles
     const allProfiles = await db.select().from(profiles);
 
-    console.log(`Found ${allProfiles.length} profiles to migrate`);
+    // console.log(`Found ${allProfiles.length} profiles to migrate`);
 
     let migrated = 0;
     let errors = 0;
@@ -25,7 +25,7 @@ async function migrateUsers() {
           .then((res) => res[0]);
 
         if (existingUser) {
-          console.log(`User ${profile.email} already exists, skipping...`);
+          // console.log(`User ${profile.email} already exists, skipping...`);
           continue;
         }
 
@@ -41,14 +41,14 @@ async function migrateUsers() {
         });
 
         migrated++;
-        console.log(`Migrated: ${profile.email} (${profile.role})`);
+        // console.log(`Migrated: ${profile.email} (${profile.role})`);
       } catch (error) {
         console.error(`Error migrating ${profile.email}:`, error);
         errors++;
       }
     }
 
-    console.log(`Migration complete! Migrated: ${migrated}, Errors: ${errors}`);
+    // console.log(`Migration complete! Migrated: ${migrated}, Errors: ${errors}`);
   } catch (error) {
     console.error("Migration failed:", error);
   }

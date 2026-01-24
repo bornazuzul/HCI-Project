@@ -421,7 +421,7 @@ export default function ActivitiesGrid({
           }
           hover:border-blue-300
           overflow-hidden relative
-          flex flex-col h-full /* FIX: Added for footer positioning */
+          flex flex-col h-full
         `}
             >
               {/* Card Header */}
@@ -436,7 +436,7 @@ export default function ActivitiesGrid({
                   </span>
 
                   {/* Date urgency indicator */}
-                  {!isPastActivity && daysUntil <= 7 && (
+                  {/* {!isPastActivity && daysUntil <= 7 && (
                     <span
                       className={`px-2 py-1 text-xs font-semibold rounded-full ${
                         daysUntil === 0
@@ -452,7 +452,7 @@ export default function ActivitiesGrid({
                           ? "Tomorrow"
                           : `${daysUntil}d`}
                     </span>
-                  )}
+                  )} */}
                 </div>
 
                 <div className="flex flex-col items-end">
@@ -463,7 +463,7 @@ export default function ActivitiesGrid({
                 </div>
               </div>
 
-              {/* Card Body - FIX: Added flex-1 to grow and push footer down */}
+              {/* Card Body */}
               <div className="mb-5 flex-1">
                 <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors line-clamp-2">
                   {activity.title}
@@ -474,9 +474,9 @@ export default function ActivitiesGrid({
                 </p>
               </div>
 
-              {/* Card Footer */}
-              <div className="pt-4">
-                {/* Capacity Indicator */}
+              {/* Card Footer with fixed height */}
+              <div className="pt-4 mt-auto min-h-[110px] flex flex-col">
+                {/* Capacity Indicator - Always at the same position */}
                 <div className="mb-3">
                   <div className="flex justify-between text-xs text-gray-600 mb-1">
                     <span>Available spots</span>
@@ -504,42 +504,46 @@ export default function ActivitiesGrid({
                     ></div>
                   </div>
                 </div>
-                <div className="pt-4 flex flex-col sm:flex-row border-t border-gray-200 items-start sm:items-center justify-between gap-3">
-                  {/* Location - with proper line breaking */}
-                  <div className="flex items-start text-gray-700 w-full sm:w-auto min-w-0">
-                    <svg
-                      className="w-5 h-5 font-semibold text-gray-500 shrink-0 mt-0.5 mr-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                    </svg>
-                    <span className="text-sm font-semibold text-gray-800 break-words min-w-0">
-                      {activity.location}
-                    </span>
-                  </div>
 
-                  {/* Organizer Info */}
-                  {showOrganizerInfo && (
-                    <div className="flex items-center text-gray-700 shrink-0 bg-gray-50 px-3 py-1.5 rounded-lg">
-                      <User className="w-4 h-4 text-gray-500 mr-1.5" />
-                      <span className="text-sm font-medium text-gray-800 truncate max-w-[140px] sm:max-w-[160px]">
-                        {activity.organizerName}
+                {/* Location and Organizer - Vertically centered */}
+                <div className="pt-4 border-t border-gray-200 flex-1">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 h-full">
+                    {/* Location container - vertically centers content */}
+                    <div className="flex items-center text-gray-700 min-w-0 flex-1">
+                      <svg
+                        className="w-5 h-5 text-gray-500 shrink-0 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                      </svg>
+                      <span className="text-sm font-semibold text-gray-800 break-words line-clamp-2 min-w-0">
+                        {activity.location}
                       </span>
                     </div>
-                  )}
+
+                    {/* Organizer Info */}
+                    {showOrganizerInfo && (
+                      <div className="flex items-center text-gray-700 shrink-0 bg-gray-50 px-3 py-1.5 rounded-lg mt-2 sm:mt-0">
+                        <User className="w-4 h-4 text-gray-500 mr-1.5" />
+                        <span className="text-sm font-medium text-gray-800 truncate max-w-[140px] sm:max-w-[160px]">
+                          {activity.organizerName}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 

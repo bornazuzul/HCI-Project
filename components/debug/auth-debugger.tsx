@@ -8,7 +8,7 @@ export default function AuthDebugger() {
   const { isLoggedIn, user, isLoading } = useApp();
 
   useEffect(() => {
-    console.log("🔍 Auth Debug - Current State:", {
+    console.log("Auth Debug - Current State:", {
       isLoggedIn,
       user: user
         ? { id: user.id, email: user.email, name: user.name, role: user.role }

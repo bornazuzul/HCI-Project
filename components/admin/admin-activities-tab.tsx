@@ -70,7 +70,7 @@ const fetchActivityCounts = async (): Promise<{
     }
 
     // Fallback: count from individual status fetches
-    console.log("Counts endpoint failed, using fallback...");
+    // console.log("Counts endpoint failed, using fallback...");
     const [pending, approved, rejected] = await Promise.all([
       fetchActivitiesByStatus("pending"),
       fetchActivitiesByStatus("approved"),
@@ -94,7 +94,7 @@ const fetchActivityCounts = async (): Promise<{
 
 const updateActivityStatus = async (
   id: string,
-  status: "pending" | "approved" | "rejected"
+  status: "pending" | "approved" | "rejected",
 ): Promise<void> => {
   const action = status === "approved" ? "approve" : "reject";
 
@@ -158,7 +158,7 @@ export default function AdminActivitiesTab() {
   const loadAllActivities = async () => {
     setLoading(true);
     try {
-      console.log("Loading all activities...");
+      // console.log("Loading all activities...");
 
       // Fetch activities by status in parallel
       const [pending, approved, rejected] = await Promise.all([
@@ -167,11 +167,11 @@ export default function AdminActivitiesTab() {
         fetchActivitiesByStatus("rejected"),
       ]);
 
-      console.log("Fetched activities:", {
-        pending: pending.length,
-        approved: approved.length,
-        rejected: rejected.length,
-      });
+      // console.log("Fetched activities:", {
+      //   pending: pending.length,
+      //   approved: approved.length,
+      //   rejected: rejected.length,
+      // });
 
       const activityCounts = await fetchActivityCounts();
 
@@ -192,7 +192,7 @@ export default function AdminActivitiesTab() {
     } catch (error) {
       console.error("Error loading activities:", error);
       alert(
-        "Failed to load activities. Please check your connection and try again."
+        "Failed to load activities. Please check your connection and try again.",
       );
 
       setActivities({
@@ -213,7 +213,7 @@ export default function AdminActivitiesTab() {
   const handleApprove = async (id: string) => {
     setProcessing(id);
     try {
-      console.log("Approving activity:", id);
+      // console.log("Approving activity:", id);
       await updateActivityStatus(id, "approved");
       await loadAllActivities();
     } catch (error) {
@@ -221,7 +221,7 @@ export default function AdminActivitiesTab() {
       alert(
         `Failed to approve activity: ${
           error instanceof Error ? error.message : "Unknown error"
-        }`
+        }`,
       );
     } finally {
       setProcessing(null);
@@ -231,7 +231,7 @@ export default function AdminActivitiesTab() {
   const handleReject = async (id: string) => {
     setProcessing(id);
     try {
-      console.log("Rejecting activity:", id);
+      // console.log("Rejecting activity:", id);
       await updateActivityStatus(id, "rejected");
       await loadAllActivities();
     } catch (error) {
@@ -239,7 +239,7 @@ export default function AdminActivitiesTab() {
       alert(
         `Failed to reject activity: ${
           error instanceof Error ? error.message : "Unknown error"
-        }`
+        }`,
       );
     } finally {
       setProcessing(null);
@@ -249,7 +249,7 @@ export default function AdminActivitiesTab() {
   const handleDelete = async (id: string) => {
     if (
       !confirm(
-        "Are you sure you want to delete this activity? This action cannot be undone."
+        "Are you sure you want to delete this activity? This action cannot be undone.",
       )
     ) {
       return;
@@ -257,7 +257,7 @@ export default function AdminActivitiesTab() {
 
     setProcessing(id);
     try {
-      console.log("Deleting activity:", id);
+      // console.log("Deleting activity:", id);
       await deleteActivity(id);
       await loadAllActivities();
     } catch (error) {
@@ -265,7 +265,7 @@ export default function AdminActivitiesTab() {
       alert(
         `Failed to delete activity: ${
           error instanceof Error ? error.message : "Unknown error"
-        }`
+        }`,
       );
     } finally {
       setProcessing(null);
@@ -344,14 +344,14 @@ export default function AdminActivitiesTab() {
                         activity.category === "environment"
                           ? "bg-green-100 text-green-700"
                           : activity.category === "community"
-                          ? "bg-blue-100 text-blue-700"
-                          : activity.category === "education"
-                          ? "bg-purple-100 text-purple-700"
-                          : activity.category === "sports"
-                          ? "bg-orange-100 text-orange-700"
-                          : activity.category === "health"
-                          ? "bg-red-100 text-red-700"
-                          : "bg-gray-100 text-gray-700"
+                            ? "bg-blue-100 text-blue-700"
+                            : activity.category === "education"
+                              ? "bg-purple-100 text-purple-700"
+                              : activity.category === "sports"
+                                ? "bg-orange-100 text-orange-700"
+                                : activity.category === "health"
+                                  ? "bg-red-100 text-red-700"
+                                  : "bg-gray-100 text-gray-700"
                       }`}
                     >
                       {activity.category}

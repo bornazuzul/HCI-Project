@@ -28,14 +28,13 @@ export default function LoginPage() {
       if (result.success) {
         console.log("Login successful, waiting for auth state update...");
 
-        // Wait a bit for the auth state to update
         setTimeout(() => {
           console.log("Redirecting to home page...");
-          window.location.href = "/"; // Use window.location for guaranteed redirect
+          window.location.href = "/";
         }, 500);
       } else {
         setError(
-          result.error || "Login failed. Please check your credentials."
+          result.error || "Login failed. Please check your credentials.",
         );
       }
     } catch (err: any) {

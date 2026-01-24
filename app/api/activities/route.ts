@@ -28,7 +28,7 @@ const createActivitySchema = z.object({
 // Helper function to determine ID type
 function isUUID(id: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-    id
+    id,
   );
 }
 
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
       if (!activity) {
         return NextResponse.json(
           { success: false, error: "Activity not found" },
-          { status: 404 }
+          { status: 404 },
         );
       }
 
@@ -161,7 +161,7 @@ export async function GET(request: NextRequest) {
     if (isAdminRequest) {
       const data = await query.orderBy(
         asc(activities.date),
-        asc(activities.time)
+        asc(activities.time),
       );
 
       const formattedData = data.map((row) => ({
@@ -236,7 +236,7 @@ export async function GET(request: NextRequest) {
       if (my && userId) {
         if (!isUUID(userId)) {
           countQuery = countQuery.where(
-            eq(activities.betterAuthOrganizerId, userId)
+            eq(activities.betterAuthOrganizerId, userId),
           );
         } else {
           countQuery = countQuery.where(eq(activities.organizerId, userId));
@@ -297,18 +297,18 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    console.log("📦 Activity POST Request Received");
+    // console.log("Activity POST Request Received");
 
     const body = await request.json();
-    console.log("📋 Full Request body:", JSON.stringify(body, null, 2));
+    // console.log("Full Request body:", JSON.stringify(body, null, 2));
 
     // Get session from Better Auth
-    console.log("🔐 Attempting to get Better Auth session...");
+    // console.log("Attempting to get Better Auth session...");
 
     try {
       const cookie = request.headers.get("cookie") || "";
-      console.log("🍪 Cookie present:", cookie ? "Yes" : "No");
-      console.log("Cookie length:", cookie.length);
+      // console.log("Cookie present:", cookie ? "Yes" : "No");
+      // console.log("Cookie length:", cookie.length);
 
       const sessionResult = await auth.api.getSession({
         headers: {
@@ -316,10 +316,10 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      console.log(
-        "✅ Better Auth Session Result:",
-        JSON.stringify(sessionResult, null, 2)
-      );
+      // console.log(
+      //   "✅ Better Auth Session Result:",
+      //   JSON.stringify(sessionResult, null, 2)
+      // );
 
       if (!sessionResult || !sessionResult.user) {
         console.error("❌ No user in session:", sessionResult);
@@ -329,18 +329,18 @@ export async function POST(request: NextRequest) {
             error: "Authentication required. Please log in.",
             debug: "No user found in session",
           },
-          { status: 401 }
+          { status: 401 },
         );
       }
 
       const sessionUser = sessionResult.user;
-      console.log("👤 Session User:", JSON.stringify(sessionUser, null, 2));
+      // console.log("👤 Session User:", JSON.stringify(sessionUser, null, 2));
 
       // Type assertion for the user object with role
       const typedUser = sessionUser as any;
       const userRole = typedUser.role || "user";
 
-      console.log("👑 User role:", userRole);
+      // console.log("👑 User role:", userRole);
 
       const validationResult = createActivitySchema.safeParse(body);
       if (!validationResult.success) {
@@ -351,12 +351,12 @@ export async function POST(request: NextRequest) {
             error: "Validation failed",
             details: validationResult.error.errors,
           },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
       const validatedData = validationResult.data;
-      console.log("✅ Validated data:", JSON.stringify(validatedData, null, 2));
+      // console.log("✅ Validated data:", JSON.stringify(validatedData, null, 2));
 
       // Date validation
       const selectedDate = new Date(validatedData.date);
@@ -369,7 +369,7 @@ export async function POST(request: NextRequest) {
             success: false,
             error: "Date cannot be in the past",
           },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -378,29 +378,29 @@ export async function POST(request: NextRequest) {
       const finalOrganizerName = sessionUser.name || "User";
       const finalOrganizerEmail = sessionUser.email || "user@example.com";
 
-      console.log("👥 Organizer info:", {
-        userId: finalUserId,
-        organizer_name: finalOrganizerName,
-        organizer_email: finalOrganizerEmail,
-      });
+      // console.log("👥 Organizer info:", {
+      //   userId: finalUserId,
+      //   organizer_name: finalOrganizerName,
+      //   organizer_email: finalOrganizerEmail,
+      // });
 
       // Convert date string to ISO string for Drizzle (YYYY-MM-DD format)
       const activityDate = new Date(validatedData.date);
       const isoDateString = activityDate.toISOString().split("T")[0]; // Gets YYYY-MM-DD
 
-      console.log("📅 Date for database:", {
-        input: validatedData.date,
-        dateObject: activityDate.toString(),
-        isoString: isoDateString,
-      });
+      // console.log("📅 Date for database:", {
+      //   input: validatedData.date,
+      //   dateObject: activityDate.toString(),
+      //   isoString: isoDateString,
+      // });
 
       // ========== DEBUG SECTION ==========
-      console.log("🔍 ========== DEBUG SECTION ==========");
-      console.log("🔍 1. Testing Drizzle schema...");
+      // console.log("🔍 ========== DEBUG SECTION ==========");
+      // console.log("🔍 1. Testing Drizzle schema...");
 
-      // Check if activities table exists in schema
-      console.log("🔍 Activities table type:", typeof activities);
-      console.log("🔍 Activities table keys:", Object.keys(activities));
+      // // Check if activities table exists in schema
+      // console.log("🔍 Activities table type:", typeof activities);
+      // console.log("🔍 Activities table keys:", Object.keys(activities));
 
       // Create a test object with the exact structure
       const testActivityData = {
@@ -419,36 +419,16 @@ export async function POST(request: NextRequest) {
         status: "pending",
       };
 
-      console.log(
-        "🔍 2. Test data structure:",
-        JSON.stringify(testActivityData, null, 2)
-      );
-
-      // Check data types
-      console.log("🔍 3. Data type checks:");
-      console.log("   - title type:", typeof testActivityData.title);
-      console.log("   - date type:", typeof testActivityData.date);
-      console.log(
-        "   - maxApplicants type:",
-        typeof testActivityData.maxApplicants
-      );
-      console.log("   - organizerId:", testActivityData.organizerId);
-      console.log("   - status:", testActivityData.status);
-
-      // Test 1: Try minimal insert without createdAt/updatedAt
-      console.log(
-        "🔍 4. Test 1: Minimal insert (without createdAt/updatedAt)..."
-      );
       try {
         const [testActivity1] = await db
           .insert(activities)
           .values(testActivityData)
           .returning();
 
-        console.log("✅ Test 1 SUCCESS! Activity created:", {
-          id: testActivity1.id,
-          title: testActivity1.title,
-        });
+        // console.log("Test 1 SUCCESS! Activity created:", {
+        //   id: testActivity1.id,
+        //   title: testActivity1.title,
+        // });
 
         return NextResponse.json(
           {
@@ -464,21 +444,21 @@ export async function POST(request: NextRequest) {
               organizerEmail: testActivity1.organizerEmail,
             },
           },
-          { status: 201 }
+          { status: 201 },
         );
       } catch (testError1: any) {
         console.error("❌ Test 1 FAILED:", testError1.message);
         console.error("❌ Test 1 stack:", testError1.stack);
 
         // Test 2: Try with type assertion
-        console.log("🔍 5. Test 2: With type assertion (as any)...");
+        // console.log("🔍 5. Test 2: With type assertion (as any)...");
         try {
           const [testActivity2] = await db
             .insert(activities)
             .values(testActivityData as any)
             .returning();
 
-          console.log("✅ Test 2 SUCCESS! Activity created:", testActivity2.id);
+          // console.log("Test 2 SUCCESS! Activity created:", testActivity2.id);
 
           return NextResponse.json(
             {
@@ -494,7 +474,7 @@ export async function POST(request: NextRequest) {
                 organizerEmail: testActivity2.organizerEmail,
               },
             },
-            { status: 201 }
+            { status: 201 },
           );
         } catch (testError2: any) {
           console.error("❌ Test 2 FAILED:", testError2.message);
@@ -512,10 +492,10 @@ export async function POST(request: NextRequest) {
               .values(testActivityData3 as any)
               .returning();
 
-            console.log(
-              "✅ Test 3 SUCCESS! Activity created:",
-              testActivity3.id
-            );
+            // console.log(
+            //   "✅ Test 3 SUCCESS! Activity created:",
+            //   testActivity3.id
+            // );
 
             return NextResponse.json(
               {
@@ -531,18 +511,14 @@ export async function POST(request: NextRequest) {
                   organizerEmail: testActivity3.organizerEmail,
                 },
               },
-              { status: 201 }
+              { status: 201 },
             );
           } catch (testError3: any) {
             console.error("❌ Test 3 FAILED:", testError3.message);
 
-            // Final test: Show what the schema expects
-            console.log("🔍 7. Schema inspection:");
-            console.log("🔍 Activities table columns:");
             const columnNames = Object.keys(activities).filter(
-              (key) => !key.startsWith("_")
+              (key) => !key.startsWith("_"),
             );
-            console.log("🔍 Columns:", columnNames);
 
             return NextResponse.json(
               {
@@ -558,7 +534,7 @@ export async function POST(request: NextRequest) {
                 suggestion:
                   "Check if all required columns are provided and have correct types",
               },
-              { status: 500 }
+              { status: 500 },
             );
           }
         }
@@ -582,7 +558,7 @@ export async function POST(request: NextRequest) {
             error: "Date formatting error. Please check the date format.",
             debug: "Dates must be passed as strings to the database",
           },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -592,7 +568,7 @@ export async function POST(request: NextRequest) {
           error: "Failed to create activity",
           debug: sessionError.message,
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
   } catch (error: any) {
@@ -609,7 +585,7 @@ export async function POST(request: NextRequest) {
         details:
           process.env.NODE_ENV === "development" ? error.message : undefined,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -630,7 +606,7 @@ export async function PATCH(request: NextRequest) {
           success: false,
           error: "Authentication required",
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -644,7 +620,7 @@ export async function PATCH(request: NextRequest) {
           success: false,
           error: "Only admins can approve/reject activities",
         },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -657,7 +633,7 @@ export async function PATCH(request: NextRequest) {
           success: false,
           error: "Missing required fields: action and activityId",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -667,19 +643,19 @@ export async function PATCH(request: NextRequest) {
           success: false,
           error: "Invalid action. Must be 'approve' or 'reject'",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const status = action === "approve" ? "approved" : "rejected";
 
-    console.log("🔧 Updating activity status:", {
-      activityId,
-      action,
-      status,
-      userRole,
-      userId: sessionResult.user.id,
-    });
+    // console.log("🔧 Updating activity status:", {
+    //   activityId,
+    //   action,
+    //   status,
+    //   userRole,
+    //   userId: sessionResult.user.id,
+    // });
 
     // Update activity status - FIX: Use Date object for timestamp columns
     const [updatedActivity] = await db
@@ -697,15 +673,15 @@ export async function PATCH(request: NextRequest) {
           success: false,
           error: "Activity not found",
         },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
-    console.log("✅ Activity updated:", {
-      id: updatedActivity.id,
-      title: updatedActivity.title,
-      newStatus: updatedActivity.status,
-    });
+    // console.log("Activity updated:", {
+    //   id: updatedActivity.id,
+    //   title: updatedActivity.title,
+    //   newStatus: updatedActivity.status,
+    // });
 
     return NextResponse.json({
       success: true,
@@ -726,7 +702,7 @@ export async function PATCH(request: NextRequest) {
         details:
           process.env.NODE_ENV === "development" ? error.message : undefined,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -747,7 +723,7 @@ export async function DELETE(request: NextRequest) {
           success: false,
           error: "Authentication required",
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -760,7 +736,7 @@ export async function DELETE(request: NextRequest) {
           success: false,
           error: "Activity ID is required",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -777,7 +753,7 @@ export async function DELETE(request: NextRequest) {
           success: false,
           error: "Activity not found",
         },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -792,7 +768,7 @@ export async function DELETE(request: NextRequest) {
           success: false,
           error: "You can only delete your own activities",
         },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -820,7 +796,7 @@ export async function DELETE(request: NextRequest) {
         details:
           process.env.NODE_ENV === "development" ? error.message : undefined,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
