@@ -204,8 +204,9 @@ The entry point for users to log in or register. Forms are simple and clear, ens
 
 
 ### Notifications Popup
-Users can send or view notifications related to events. The popup ensures concise interaction without leaving the current page.  
-![Notifications](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/images/notifications.jpg)
+The entry point for users to view and send notifications related to events. The popup ensures concise interaction without leaving the current page.  
+![Notifications Popup](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/images/notifications.jpg)
+
 ---
 
 ## 9. HCI Principles Applied
