@@ -73,7 +73,7 @@ As a result, both sides lose valuable opportunities for cooperation and communit
 ## 5. User Personas
 
 ### Ana – Student Volunteer
-(https://github.com/bornazuzul/HCI-Project/blob/main/assigments/2_assignment/images/1_user.jpeg)
+![](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/2_assignment/images/1_user.jpeg)
 - **Age:** 20  
 - **Occupation:** Psychology Student  
 - **Location:** Split  
@@ -83,7 +83,7 @@ As a result, both sides lose valuable opportunities for cooperation and communit
 - **Quote:** *“I want to help, but I don’t know where to start.”*
 
 ### Marko – Event Organizer
-(https://github.com/bornazuzul/HCI-Project/blob/main/assigments/2_assignment/images/2_user.jpeg)
+![](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/2_assignment/images/2_user.jpeg)
 - **Age:** 35  
 - **Occupation:** NGO Coordinator  
 - **Location:** Zagreb  
@@ -93,7 +93,7 @@ As a result, both sides lose valuable opportunities for cooperation and communit
 - **Quote:** *“I wish there was one place where all volunteers could see our events.”*
 
 ### Ivana – Working Professional
-(https://github.com/bornazuzul/HCI-Project/blob/main/assigments/2_assignment/images/3_user.jpeg)
+![](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/2_assignment/images/3_user.jpeg)
 - **Age:** 42  
 - **Occupation:** Teacher  
 - **Location:** Zadar  
@@ -101,6 +101,19 @@ As a result, both sides lose valuable opportunities for cooperation and communit
 - **Motivation:** Personal fulfillment  
 - **Frustration:** Lack of flexible options  
 - **Quote:** *“I’d love to help, but I need something that fits my time.”*
+
+ ### Marija – Retired Volunteer
+![](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/2_assignment/images/marija.jpg)
+- **Age:** 65  
+- **Occupation:** Retired nurse  
+- **Location:** Šibenik  
+- **Goals:**  
+  - Stay active and socially engaged  
+  - Help younger generations and the local community  
+- **Motivation:** Feels useful and fulfilled when contributing to society  
+- **Frustration:** Finds technology sometimes confusing and complex  
+- **Quote:** *“I still have time and energy — I just need a simple way to help.”*
+
 
 ---
 
@@ -165,16 +178,31 @@ The structure ensures clarity and fast access to core features.
 
 ## 8. Design and User Interface
 
-The interface follows **minimalistic and modern design principles**:
+The interface follows minimalistic and modern design principles, focusing on clarity, simplicity, and user-friendly navigation. Screenshots of the main pages are provided below to illustrate the layout, navigation, and interaction design.
 
-- Clear navigation
-- Simple color palette
-- Readable typography
-- Responsive layout
-- Emphasis on accessibility and clarity
+### Home Page
+The Home Page introduces the application, shows its purpose, and guides users to explore volunteering opportunities.  
+![Home Page](images/home.png)
 
-The goal was to avoid clutter and allow users to focus on actions rather than visual noise.
+### Activities Page
+This page lists all volunteering events, with filters by location and type. Users can join or withdraw from events and view participant counts.  
+![Activities Page](images/activities.png)
 
+### Activity Details (Optional)
+Shows more information about a specific event, including description, date, location, and participant list.  
+![Activity Details](images/activity-details.png)
+
+### Admin Panel
+The Admin Panel allows administrators to approve new activities, manage users, and delete events or notifications.  
+![Admin Panel](images/admin-panel.png)
+
+### Login / Registration
+The entry point for users to log in or register. Forms are simple and clear, ensuring easy onboarding for all age groups.  
+![Login Page](images/login.png)
+
+### Notifications Popup
+Users can send or view notifications related to events. The popup ensures concise interaction without leaving the current page.  
+![Notifications](images/notifications.png)
 ---
 
 ## 9. HCI Principles Applied
@@ -208,15 +236,13 @@ Potential future improvements:
 
 ## 11. Technologies Used
 
-*(Fill in your real technologies if needed)*
 
-Example:
-
-- React / Next.js
+- Next.js
 - TypeScript
 - Tailwind CSS
 - Vercel Hosting
 - Supabase
+- Contentful CMS
 
 ---
 
@@ -226,12 +252,16 @@ Performance testing was conducted using Google PageSpeed Insights.
 
 ### Mobile Result
 ![Mobile Speed Test](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/images/mobile%20speed.jpg)
+<br>
+(https://pagespeed.web.dev/analysis/https-hci-project-rho-vercel-app/2hjvh6ewk1?form_factor=mobile)
+
 
 
 
 ### Desktop Result
 ![Desktop Speed Test](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/images/desktop%20speedtest.jpg)
-
+<br>
+(https://pagespeed.web.dev/analysis/https-hci-project-rho-vercel-app/2hjvh6ewk1?form_factor=desktop)
 
 
 ## 13. Conclusion
