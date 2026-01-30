@@ -222,11 +222,13 @@ Example:
 Performance testing was conducted using Google PageSpeed Insights.
 
 ### Mobile Result
-![Mobile Speed Test](images/mobile-speed.png)
+![Mobile Speed Test](assigments/images/mobile%20speed.jpg)
+
 
 
 ### Desktop Result
-![Desktop Speed Test](images/desktop-speed.png)
+![Desktop Speed Test](assigments/images/desktop%20speedtest.jpg)
+
 
 
 ## 13. Conclusion
