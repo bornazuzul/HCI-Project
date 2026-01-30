@@ -15,7 +15,7 @@
 
 ### Semester Project
 - Link to production version: [Production Version](https://hci-project-rho.vercel.app/)
-- Link to final report: [Final Report](#)
+- Link to final report: [Final Report](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/final_report.md)
 
 ### Semester Assignments
 
