@@ -182,27 +182,30 @@ The interface follows minimalistic and modern design principles, focusing on cla
 
 ### Home Page
 The Home Page introduces the application, shows its purpose, and guides users to explore volunteering opportunities.  
-![Home Page](images/home.png)
+![Home Page](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/images/home.jpg)
 
 ### Activities Page
 This page lists all volunteering events, with filters by location and type. Users can join or withdraw from events and view participant counts.  
-![Activities Page](images/activities.png)
+![Activities Page](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/images/activities.jpg)
 
-### Activity Details (Optional)
+### Activity Details 
 Shows more information about a specific event, including description, date, location, and participant list.  
-![Activity Details](images/activity-details.png)
+![Activity Details](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/images/activity%20details.jpg)
 
 ### Admin Panel
 The Admin Panel allows administrators to approve new activities, manage users, and delete events or notifications.  
-![Admin Panel](images/admin-panel.png)
+![Admin Panel](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/images/admin%20.jpg)
 
 ### Login / Registration
 The entry point for users to log in or register. Forms are simple and clear, ensuring easy onboarding for all age groups.  
-![Login Page](images/login.png)
+![Login Page](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/images/login.jpg)
+<br>
+![Sign Up](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/images/sign%20up.jpg)
+
 
 ### Notifications Popup
 Users can send or view notifications related to events. The popup ensures concise interaction without leaving the current page.  
-![Notifications](images/notifications.png)
+![Notifications](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/images/notifications.jpg)
 ---
 
 ## 9. HCI Principles Applied
