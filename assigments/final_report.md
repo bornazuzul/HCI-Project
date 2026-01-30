@@ -213,7 +213,7 @@ Example:
 - TypeScript
 - Tailwind CSS
 - Vercel Hosting
-- Firebase / Supabase / Local Storage
+- Supabase
 
 ---
 
