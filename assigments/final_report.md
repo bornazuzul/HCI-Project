@@ -217,7 +217,19 @@ Example:
 
 ---
 
-## 12. Conclusion
+## 12. Performance Testing
+
+Performance testing was conducted using Google PageSpeed Insights.
+
+### Mobile Result
+![Mobile Speed Test](images/mobile-speed.png)
+
+
+### Desktop Result
+![Desktop Speed Test](images/desktop-speed.png)
+
+
+## 13. Conclusion
 
 VolunMe successfully demonstrates how HCI principles can be applied to create a meaningful and socially impactful digital product.
 
