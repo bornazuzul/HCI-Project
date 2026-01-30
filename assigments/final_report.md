@@ -73,6 +73,7 @@ As a result, both sides lose valuable opportunities for cooperation and communit
 ## 5. User Personas
 
 ### Ana – Student Volunteer
+(https://github.com/bornazuzul/HCI-Project/blob/main/assigments/2_assignment/images/1_user.jpeg)
 - **Age:** 20  
 - **Occupation:** Psychology Student  
 - **Location:** Split  
@@ -82,6 +83,7 @@ As a result, both sides lose valuable opportunities for cooperation and communit
 - **Quote:** *“I want to help, but I don’t know where to start.”*
 
 ### Marko – Event Organizer
+(https://github.com/bornazuzul/HCI-Project/blob/main/assigments/2_assignment/images/2_user.jpeg)
 - **Age:** 35  
 - **Occupation:** NGO Coordinator  
 - **Location:** Zagreb  
@@ -91,6 +93,7 @@ As a result, both sides lose valuable opportunities for cooperation and communit
 - **Quote:** *“I wish there was one place where all volunteers could see our events.”*
 
 ### Ivana – Working Professional
+(https://github.com/bornazuzul/HCI-Project/blob/main/assigments/2_assignment/images/3_user.jpeg)
 - **Age:** 42  
 - **Occupation:** Teacher  
 - **Location:** Zadar  
@@ -222,12 +225,12 @@ Example:
 Performance testing was conducted using Google PageSpeed Insights.
 
 ### Mobile Result
-![Mobile Speed Test](assigments/images/mobile%20speed.jpg)
+![Mobile Speed Test](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/images/mobile%20speed.jpg)
 
 
 
 ### Desktop Result
-![Desktop Speed Test](assigments/images/desktop%20speedtest.jpg)
+![Desktop Speed Test](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/images/desktop%20speedtest.jpg)
 
 
 
