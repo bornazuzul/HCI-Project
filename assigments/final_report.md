@@ -120,8 +120,8 @@ As a result, both sides lose valuable opportunities for cooperation and communit
 ## 6. Information Architecture
 
 ### App Entry
-- **Login** – Existing users authenticate and enter Home.
-- **Registration** – New users fill personal data and are redirected to Login.
+- **Home page** – Acts as the application entry point.
+- From Home, users can choose to **Login** or **Register**.
 
 ### USER ROLE
 
@@ -144,19 +144,10 @@ As a result, both sides lose valuable opportunities for cooperation and communit
 
 ### ADMIN ROLE
 
-#### Home
-- Same as user home.
+- The Admin Panel allows administrators to approve new activities and delete events or notifications.
 
-#### Activities
-- Approve new activities.
-- Delete events (auto notification sent).
 
-#### Notifications
-- Delete notifications.
 
-#### Users
-- View all users.
-- Delete users.
 
 ---
 
@@ -168,7 +159,6 @@ The sitemap defines hierarchical navigation between:
 - Home
 - Activities
 - Notifications
-- Users (Admin)
 - Activity Details
 - Create Activity Popup
 
@@ -181,23 +171,28 @@ The structure ensures clarity and fast access to core features.
 The interface follows minimalistic and modern design principles, focusing on clarity, simplicity, and user-friendly navigation. Screenshots of the main pages are provided below to illustrate the layout, navigation, and interaction design.
 
 ### Home Page
-The Home Page introduces the application, shows its purpose, and guides users to explore volunteering opportunities.  
+The Home Page introduces the application, shows its purpose, and guides users to explore volunteering opportunities.
+<br>
 ![Home Page](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/images/home.jpg)
 
 ### Activities Page
 This page lists all volunteering events, with filters by location and type. Users can join or withdraw from events and view participant counts.  
+<br>
 ![Activities Page](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/images/activities.jpg)
 
 ### Activity Details 
 Shows more information about a specific event, including description, date, location, and participant list.  
+<br>
 ![Activity Details](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/images/activity%20details.jpg)
 
 ### Admin Panel
 The Admin Panel allows administrators to approve new activities, manage users, and delete events or notifications.  
+<br>
 ![Admin Panel](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/images/admin%20.jpg)
 
 ### Login / Registration
 The entry point for users to log in or register. Forms are simple and clear, ensuring easy onboarding for all age groups.  
+<br>
 ![Login Page](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/images/login.jpg)
 <br>
 ![Sign Up](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/images/sign%20up.jpg)
@@ -205,6 +200,7 @@ The entry point for users to log in or register. Forms are simple and clear, ens
 
 ### Notifications Popup
 The entry point for users to view and send notifications related to events. The popup ensures concise interaction without leaving the current page.  
+<br>
 ![Notifications Popup](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/images/notifications.jpg)
 
 ---
@@ -255,6 +251,7 @@ Potential future improvements:
 Performance testing was conducted using Google PageSpeed Insights.
 
 ### Mobile Result
+<br>
 ![Mobile Speed Test](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/images/mobile%20speed.jpg)
 <br>
 (https://pagespeed.web.dev/analysis/https-hci-project-rho-vercel-app/2hjvh6ewk1?form_factor=mobile)
@@ -263,6 +260,7 @@ Performance testing was conducted using Google PageSpeed Insights.
 
 
 ### Desktop Result
+<br>
 ![Desktop Speed Test](https://github.com/bornazuzul/HCI-Project/blob/main/assigments/images/desktop%20speedtest.jpg)
 <br>
 (https://pagespeed.web.dev/analysis/https-hci-project-rho-vercel-app/2hjvh6ewk1?form_factor=desktop)
