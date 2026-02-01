@@ -251,19 +251,18 @@ Potential future improvements:
 Performance testing was conducted using Google PageSpeed Insights.
 
 ### Mobile Result
-<br>
+
 ![Mobile Speed Test](https://raw.githubusercontent.com/bornazuzul/HCI-Project/main/assigments/images/mobile%20speed.jpg)
-<br>
-(https://pagespeed.web.dev/analysis/https-hci-project-rho-vercel-app/2hjvh6ewk1?form_factor=mobile)
 
-
+https://pagespeed.web.dev/analysis/https-hci-project-rho-vercel-app/2hjvh6ewk1?form_factor=mobile
 
 
 ### Desktop Result
-<br>
+
 ![Desktop Speed Test](https://raw.githubusercontent.com/bornazuzul/HCI-Project/main/assigments/images/desktop%20speedtest.jpg)
-<br>
-(https://pagespeed.web.dev/analysis/https-hci-project-rho-vercel-app/2hjvh6ewk1?form_factor=desktop)
+
+https://pagespeed.web.dev/analysis/https-hci-project-rho-vercel-app/2hjvh6ewk1?form_factor=desktop
+
 
 
 ## 13. Conclusion
