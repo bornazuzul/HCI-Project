@@ -59,7 +59,7 @@ export default function LoginPage() {
         {/* Back Navigation */}
         <div className="mb-8">
           <Button
-            variant="default"
+            variant="outline"
             size="sm"
             onClick={handleBack}
             className="gap-2 hover:bg-primary/10 hover:text-black transition-colors"
@@ -266,7 +266,11 @@ export default function LoginPage() {
                   />
                 </div>
 
-                <Button type="submit" className="w-full" disabled={isLoading}>
+                <Button
+                  type="submit"
+                  className="w-full text-sm font-medium bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-3.5 py-2.5 rounded-lg shadow-sm hover:shadow hover:shadow-blue-500/25 transition-all duration-300"
+                  disabled={isLoading}
+                >
                   {isLoading ? (
                     <>
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>

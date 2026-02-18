@@ -60,7 +60,7 @@ export default function RegisterPage() {
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
           <Button
-            variant="default"
+            variant="outline"
             size="sm"
             onClick={handleBack}
             className="gap-2 hover:bg-primary/10 hover:text-black transition-colors"

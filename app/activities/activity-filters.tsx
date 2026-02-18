@@ -77,7 +77,7 @@ export default function ActivityFilters({
       </div>
 
       {/* My Activities */}
-      {user && (
+      {/* {user && (
         <div className="mb-6">
           <Button
             onClick={() =>
@@ -98,7 +98,7 @@ export default function ActivityFilters({
             {showMyActivities ? "Your Activities" : "Show My Activities"}
           </Button>
         </div>
-      )}
+      )} */}
 
       {/* Date Filter */}
       <div className="mb-6">

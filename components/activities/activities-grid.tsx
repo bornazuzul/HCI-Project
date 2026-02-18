@@ -215,7 +215,7 @@ export default function ActivitiesGrid({
       {/* Enhanced Search Bar with Date Filter Info */}
       <div className="mb-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-          <div className="relative flex-1 max-w-2xl">
+          <div className="relative flex-1 w-full">
             <input
               type="text"
               value={searchTerm}

@@ -24,7 +24,12 @@ export default function HeroSection({ isLoggedIn }: HeroSectionProps) {
         <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
           {isLoggedIn ? (
             <Link href="/activities">
-              <Button size="lg">Explore Activities</Button>
+              <Button
+                size="lg"
+                className="text-sm font-medium bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-3.5 py-2.5 rounded-lg shadow-sm hover:shadow hover:shadow-blue-500/25 transition-all duration-300"
+              >
+                Explore Activities
+              </Button>
             </Link>
           ) : (
             <>
