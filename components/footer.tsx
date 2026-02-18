@@ -59,7 +59,7 @@ export default function Footer({ isLoggedIn }: FooterProps) {
           {/* Logo and Tagline */}
           <div className="space-y-4">
             <Link href="/" className="inline-flex items-center gap-4 group">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
                 <Users className="w-7 h-7 text-white" />
               </div>
               <div className="flex flex-col items-start text-left">
@@ -77,66 +77,6 @@ export default function Footer({ isLoggedIn }: FooterProps) {
               meaningful volunteer opportunities. Our platform makes it easy to
               find, join, and track your impact in local communities.
             </p>
-          </div>
-
-          {/* Contact */}
-          <div className="pt-12 border-t border-border/50">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Get In Touch - Centered on mobile, left on desktop */}
-              <div className="space-y-4 text-center lg:text-left">
-                <h4 className="font-semibold text-foreground text-lg">
-                  Get In Touch
-                </h4>
-                <div className="flex flex-col items-center lg:items-start gap-4">
-                  <a
-                    href="mailto:support@volunme.com"
-                    className="inline-flex items-center gap-3 text-muted-foreground hover:text-primary transition-colors group"
-                  >
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                      <Mail className="w-5 h-5" />
-                    </div>
-                    <div className="text-center lg:text-left">
-                      <p className="text-sm font-medium text-foreground">
-                        Email Us
-                      </p>
-                      <p className="text-sm">support@volunme.com</p>
-                    </div>
-                  </a>
-                </div>
-              </div>
-
-              {/* Join Community - Centered on mobile, right on desktop */}
-              <div className="space-y-4 text-center lg:text-left">
-                <h4 className="font-semibold text-foreground text-lg">
-                  Join Community
-                </h4>
-                <div className="flex justify-center lg:justify-start">
-                  {!isLoggedIn && (
-                    <Link
-                      href="/register"
-                      className="w-full max-w-xs lg:max-w-none"
-                    >
-                      <Button
-                        size="sm"
-                        className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white transition-all duration-300 hover:shadow-lg"
-                      >
-                        Start Volunteering
-                      </Button>
-                    </Link>
-                  )}
-                  {isLoggedIn && (
-                    <Link
-                      href="/activities"
-                      className="w-full max-w-xs lg:max-w-none"
-                    >
-                      <Button variant="default" size="sm" className="w-full">
-                        Browse Activities
-                      </Button>
-                    </Link>
-                  )}
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -167,7 +107,7 @@ export default function Footer({ isLoggedIn }: FooterProps) {
           <Link href="/register">
             <Button
               size="lg"
-              className="rounded-full px-6 py-6 shadow-xl shadow-primary/25 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-primary/30"
+              className="rounded-full px-6 py-6 shadow-xl shadow-primary/25 bg-gradient-to-r from-primary to-accent"
             >
               <Heart className="w-5 h-5 mr-2" />
               Volunteer Now

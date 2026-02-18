@@ -96,11 +96,11 @@ export default function ActivitiesPageClient({
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <main className="pt-16 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-10">
-            <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
+          <div className="text-left mb-10">
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
               Volunteer Activities
             </h1>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="text-base sm:text-mm text-gray-600 max-w-2xl">
               {showMyActivities
                 ? "Activities you've organized"
                 : "Find meaningful opportunities to make a difference in your community"}
@@ -135,8 +135,8 @@ export default function ActivitiesPageClient({
                           {showMyActivities
                             ? "Your Activities"
                             : initialFilters.category === "all"
-                            ? "All Activities"
-                            : `${initialFilters.category} Activities`}
+                              ? "All Activities"
+                              : `${initialFilters.category} Activities`}
                         </h2>
                         {activeFiltersCount > 0 && (
                           <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
@@ -151,8 +151,8 @@ export default function ActivitiesPageClient({
                           {showMyActivities
                             ? `Activities you've organized`
                             : totalPages > 1
-                            ? `Page ${currentPage} of ${totalPages} • ${processedActivities.length} results`
-                            : `${processedActivities.length} results`}
+                              ? `Page ${currentPage} of ${totalPages} • ${processedActivities.length} results`
+                              : `${processedActivities.length} results`}
                         </p>
 
                         {/* Date filter indicator */}

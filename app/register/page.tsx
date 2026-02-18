@@ -18,7 +18,7 @@ export default function RegisterPage() {
   const handleRegister = async (
     name: string,
     email: string,
-    password: string
+    password: string,
   ) => {
     setIsLoading(true);
     setError("");
@@ -29,7 +29,7 @@ export default function RegisterPage() {
 
       if (result.success) {
         console.log(
-          "Registration successful, waiting for auth state update..."
+          "Registration successful, waiting for auth state update...",
         );
 
         setTimeout(() => {
@@ -60,13 +60,13 @@ export default function RegisterPage() {
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
           <Button
-            variant="ghost"
+            variant="default"
             size="sm"
             onClick={handleBack}
-            className="gap-2 hover:bg-primary/10 transition-colors"
+            className="gap-2 hover:bg-primary/10 hover:text-black transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            Return to Safety
+            Return
           </Button>
         </div>
 

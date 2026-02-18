@@ -59,13 +59,13 @@ export default function LoginPage() {
         {/* Back Navigation */}
         <div className="mb-8">
           <Button
-            variant="ghost"
+            variant="default"
             size="sm"
             onClick={handleBack}
-            className="gap-2 hover:bg-primary/10 transition-colors"
+            className="gap-2 hover:bg-primary/10 hover:text-black transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            Return to Safety
+            Return
           </Button>
         </div>
 
@@ -162,7 +162,7 @@ export default function LoginPage() {
                           Email:
                         </span>
                         <code className="text-xs bg-primary/10 px-3 py-1.5 rounded flex-1 font-mono break-all">
-                          user@volunme.com
+                          testUser@volunme.com
                         </code>
                       </div>
                       <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
@@ -170,7 +170,7 @@ export default function LoginPage() {
                           Password:
                         </span>
                         <code className="text-xs bg-primary/10 px-3 py-1.5 rounded flex-1 font-mono">
-                          user123
+                          testUser123
                         </code>
                       </div>
                     </div>

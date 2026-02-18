@@ -1,4 +1,4 @@
-import { Heart, Users, Zap, Globe } from "lucide-react"
+import { Heart, Users, Zap, Globe } from "lucide-react";
 
 export default function FeaturesSection() {
   const features = [
@@ -15,14 +15,15 @@ export default function FeaturesSection() {
     {
       icon: Heart,
       title: "Make an Impact",
-      description: "Help organizations and make a real difference in people's lives",
+      description:
+        "Help organizations and make a real difference in people's lives",
     },
     {
       icon: Zap,
       title: "Simple & Intuitive",
       description: "Easy-to-use platform designed for everyone",
     },
-  ]
+  ];
 
   return (
     <section className="py-20 px-4 sm:px-6 lg:px-8 bg-background">
@@ -33,22 +34,26 @@ export default function FeaturesSection() {
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {features.map((feature, index) => {
-            const Icon = feature.icon
+            const Icon = feature.icon;
             return (
               <div
                 key={index}
-                className="p-6 rounded-lg border border-border bg-card hover:shadow-lg transition-shadow"
+                className="p-6 rounded-lg border border-border bg-card"
               >
                 <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
                   <Icon className="w-6 h-6 text-primary" />
                 </div>
-                <h3 className="font-semibold text-foreground mb-2">{feature.title}</h3>
-                <p className="text-muted-foreground text-sm">{feature.description}</p>
+                <h3 className="font-semibold text-foreground mb-2">
+                  {feature.title}
+                </h3>
+                <p className="text-muted-foreground text-sm">
+                  {feature.description}
+                </p>
               </div>
-            )
+            );
           })}
         </div>
       </div>
     </section>
-  )
+  );
 }

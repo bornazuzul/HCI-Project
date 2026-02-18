@@ -1,17 +1,19 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 interface CTASectionProps {
-  isLoggedIn: boolean
+  isLoggedIn: boolean;
 }
 
 export default function CTASection({ isLoggedIn }: CTASectionProps) {
   return (
     <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-primary/10 via-accent/5 to-primary/10">
       <div className="max-w-3xl mx-auto text-center space-y-6">
-        <h2 className="text-3xl sm:text-4xl font-bold text-foreground text-balance">Ready to Make a Difference?</h2>
+        <h2 className="text-3xl sm:text-4xl font-bold text-foreground text-balance">
+          Ready to Make a Difference?
+        </h2>
         <p className="text-lg text-muted-foreground">
           {isLoggedIn
             ? "Browse our latest activities and find the perfect opportunity to volunteer."
@@ -20,10 +22,15 @@ export default function CTASection({ isLoggedIn }: CTASectionProps) {
 
         {!isLoggedIn && (
           <Link href="/register">
-            <Button size="lg">Create Your Account Today</Button>
+            <Button
+              size="lg"
+              className="text-sm font-medium bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-3.5 py-2.5 rounded-lg shadow-sm hover:shadow hover:shadow-blue-500/25 transition-all duration-300"
+            >
+              Create Your Account Today
+            </Button>
           </Link>
         )}
       </div>
     </section>
-  )
+  );
 }

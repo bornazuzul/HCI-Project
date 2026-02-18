@@ -25,6 +25,15 @@ const lato = Lato({
 export const metadata: Metadata = {
   title: "VolunMe",
   description: "Help others, build friendships, and make a real difference.",
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico" },
+      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export const viewport: Viewport = {
